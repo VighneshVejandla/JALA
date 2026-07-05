@@ -1,0 +1,20 @@
+CREATE TABLE sites (
+
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    site_code VARCHAR(20) NOT NULL UNIQUE,
+
+    site_name VARCHAR(100) NOT NULL,
+
+    owner_name VARCHAR(100) NOT NULL,
+
+    location VARCHAR(255) NOT NULL,
+
+    total_acres DECIMAL(10,2) NOT NULL,
+
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

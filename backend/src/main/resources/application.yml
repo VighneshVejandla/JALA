@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: JALA
+
+  profiles:
+    active: dev
+
+  config:
+    import: optional:file:backend/.env.properties
+
+server:
+  port: 8080
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+
+  api-docs:
+    path: /api-docs
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+supabase:
+  url: ${SUPABASE_URL}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+  storage-bucket: ${SUPABASE_STORAGE_BUCKET}

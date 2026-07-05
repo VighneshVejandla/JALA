@@ -1,0 +1,19 @@
+spring:
+
+  datasource:
+    url: jdbc:postgresql://db.iowtlwxloatcmrwngykk.supabase.co:5432/postgres
+    username: postgres
+    password: Vighnesh@2003
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    show-sql: false
+
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    root: INFO
