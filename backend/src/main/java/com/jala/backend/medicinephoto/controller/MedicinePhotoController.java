@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,10 +22,10 @@ public class MedicinePhotoController {
 
     private final MedicinePhotoService service;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<MedicinePhotoResponse>> uploadPhoto(
-            @Valid @RequestBody CreateMedicinePhotoRequest request) {
+            @Valid @ModelAttribute CreateMedicinePhotoRequest request) {
 
         MedicinePhotoResponse response =
                 service.uploadPhoto(request);

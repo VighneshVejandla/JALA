@@ -11,4 +11,7 @@ public interface MedicinePhotoRepository
 
     List<MedicinePhoto> findByMedicineEntryIdOrderByUploadedAt(
             UUID medicineEntryId);
+
+    long countByMedicineEntryId(
+            UUID medicineEntryId);
 }

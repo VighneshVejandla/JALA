@@ -28,14 +28,17 @@ public class PondCycle extends BaseEntity {
     private Pond pond;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     private ShrimpSpecies species;
 
-    @Column(name = "stocking_date", nullable = false)
+    @Column(name = "stocking_date")
     private LocalDate stockingDate;
 
-    @Column(name = "shrimp_count", nullable = false)
+    @Column(name = "shrimp_count")
     private Integer shrimpCount;
+
+    @Column(name = "cycle_number", nullable = false)
+    private Integer cycleNumber;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default

@@ -18,11 +18,15 @@ public class PondCycleResponse {
 
     private String pondName;
 
+    private Integer cycleNumber;
+
     private ShrimpSpecies species;
 
     private LocalDate stockingDate;
 
     private Integer shrimpCount;
+
+    private Boolean stockingCompleted;
 
     private PondCycleStatus status;
 }

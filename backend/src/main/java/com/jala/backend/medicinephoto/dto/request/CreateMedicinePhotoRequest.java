@@ -1,19 +1,19 @@
 package com.jala.backend.medicinephoto.dto.request;
 
 import lombok.Data;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
 @Data
 public class CreateMedicinePhotoRequest {
 
+    @NotNull
     private UUID medicineEntryId;
 
-    private String fileName;
+    @NotNull
+    private MultipartFile file;
 
-    private String filePath;
-
-    private String contentType;
-
-    private Long fileSize;
+    private String remarks;
 }

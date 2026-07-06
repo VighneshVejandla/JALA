@@ -16,7 +16,8 @@ public interface PondCycleRepository
             PondCycleStatus status
     );
 
-    List<PondCycle> findByPondIdOrderByStockingDateDesc(UUID pondId);
+    List<PondCycle> findByPondIdOrderByCycleNumberDesc(
+            UUID pondId);
 
     boolean existsByPondIdAndStatus(
             UUID pondId,

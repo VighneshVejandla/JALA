@@ -57,6 +57,7 @@ public class PondCycleServiceImpl implements PondCycleService {
         cycle.setPond(pond);
 
         cycle.setStatus(PondCycleStatus.ACTIVE);
+        cycle.setCycleNumber(1);
 
         PondCycle savedCycle = pondCycleRepository.save(cycle);
 
@@ -71,7 +72,7 @@ public class PondCycleServiceImpl implements PondCycleService {
     public List<PondCycleResponse> getCyclesByPond(UUID pondId) {
 
         return pondCycleRepository
-                .findByPondIdOrderByStockingDateDesc(pondId)
+                .findByPondIdOrderByCycleNumberDesc(pondId)
                 .stream()
                 .map(pondCycleMapper::toResponse)
                 .toList();

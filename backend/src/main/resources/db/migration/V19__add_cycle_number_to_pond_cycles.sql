@@ -1,0 +1,2 @@
+ALTER TABLE pond_cycles
+ADD COLUMN cycle_number INTEGER NOT NULL DEFAULT 1;

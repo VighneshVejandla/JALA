@@ -26,7 +26,6 @@ public final class FileNameGenerator {
     /**
      * @param siteCode     e.g. "SITE1"
      * @param siteName     e.g. "Vada Palem" (spaces are converted to underscores)
-     * @param cycleNumber  pond cycle number, e.g. 1
      * @param date         the date the entry was recorded
      * @param module       MEDICINE, RECEIPT, or HARVEST
      * @param sequence     running sequence number for that entity/day, e.g. 1 -> "001"
@@ -34,7 +33,6 @@ public final class FileNameGenerator {
      */
     public static String generateEntityFileName(String siteCode,
                                                 String siteName,
-                                                int cycleNumber,
                                                 LocalDate date,
                                                 StorageModule module,
                                                 int sequence,
@@ -55,17 +53,19 @@ public final class FileNameGenerator {
         String normalizedSiteName = siteName
                 .trim()
                 .replaceAll("[^a-zA-Z0-9]", "_")
-                .replaceAll("_+", "_");
+                .replaceAll("_+", "_")
+                .replaceAll("^_+|_+$", "");
+
         String normalizedExtension = normalizeExtension(extension);
-        normalizedSiteName = normalizedSiteName.replaceAll("^_+|_+$", "");
-        String sequencePart = String.format(Locale.ROOT, "%03d", sequence);
+
+        String sequencePart =
+                String.format(Locale.ROOT, "%03d", sequence);
 
         return String.format(
                 Locale.ROOT,
-                "%s_%s_%d_%s_%s_%s.%s",
+                "%s_%s_%s_%s_%s.%s",
                 siteCode,
                 normalizedSiteName,
-                cycleNumber,
                 date,
                 module.getTag(),
                 sequencePart,

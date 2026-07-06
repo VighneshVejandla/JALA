@@ -82,7 +82,6 @@ public class SiteDeliveryReceiptServiceImpl
                 FileNameGenerator.generateEntityFileName(
                         site.getSiteCode(),
                         site.getSiteName(),
-                        1,
                         LocalDate.now(),
                         StorageModule.RECEIPT,
                         (int) sequence,
