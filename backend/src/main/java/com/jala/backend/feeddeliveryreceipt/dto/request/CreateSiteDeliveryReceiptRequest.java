@@ -1,8 +1,8 @@
 package com.jala.backend.feeddeliveryreceipt.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -12,8 +12,8 @@ public class CreateSiteDeliveryReceiptRequest {
     @NotNull
     private UUID siteDeliveryId;
 
-    @NotBlank
-    private String photoPath;
+    @NotNull
+    private MultipartFile file;
 
     private String remarks;
 }

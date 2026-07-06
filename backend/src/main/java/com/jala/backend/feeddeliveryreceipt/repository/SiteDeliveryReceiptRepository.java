@@ -14,4 +14,9 @@ public interface SiteDeliveryReceiptRepository
     findBySiteDeliveryIdAndStatusOrderByUploadedAtAsc(
             UUID siteDeliveryId,
             FeedDeliveryStatus status);
+
+    long countBySiteDeliveryIdAndStatus(
+            UUID siteDeliveryId,
+            FeedDeliveryStatus status
+    );
 }

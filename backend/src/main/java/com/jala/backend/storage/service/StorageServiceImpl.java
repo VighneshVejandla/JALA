@@ -36,7 +36,12 @@ public class StorageServiceImpl implements StorageService {
     private final RestClient restClient;
 
     @Override
-    public String upload(MultipartFile file, StorageFolder folder, String entityId, String fileName) {
+    public String upload(
+            MultipartFile file,
+            StorageFolder folder,
+            String entityId,
+            String fileName) {
+
         validate(file, folder, entityId, fileName);
 
         String objectPath = buildObjectPath(folder, entityId, fileName);

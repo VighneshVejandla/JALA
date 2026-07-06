@@ -52,8 +52,12 @@ public final class FileNameGenerator {
             throw new FileStorageException("Sequence number must not be negative");
         }
 
-        String normalizedSiteName = siteName.trim().replaceAll("\\s+", "_");
+        String normalizedSiteName = siteName
+                .trim()
+                .replaceAll("[^a-zA-Z0-9]", "_")
+                .replaceAll("_+", "_");
         String normalizedExtension = normalizeExtension(extension);
+        normalizedSiteName = normalizedSiteName.replaceAll("^_+|_+$", "");
         String sequencePart = String.format(Locale.ROOT, "%03d", sequence);
 
         return String.format(
@@ -84,7 +88,11 @@ public final class FileNameGenerator {
             throw new FileStorageException("Missing required fields for profile file name generation");
         }
 
-        String normalizedUserName = userName.trim().replaceAll("\\s+", "");
+        String normalizedUserName = userName
+                .trim()
+                .replaceAll("[^a-zA-Z0-9]", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_+|_+$", "");
         String normalizedExtension = normalizeExtension(extension);
 
         return String.format(

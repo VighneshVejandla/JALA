@@ -8,6 +8,7 @@ import com.jala.backend.feeddeliveryreceipt.dto.response.SiteDeliveryReceiptResp
 import com.jala.backend.feeddeliveryreceipt.service.SiteDeliveryReceiptService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +23,10 @@ public class SiteDeliveryReceiptController {
 
     private final SiteDeliveryReceiptService service;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN','DRIVER')")
     public ResponseEntity<ApiResponse<SiteDeliveryReceiptResponse>> uploadReceipt(
-            @Valid @RequestBody CreateSiteDeliveryReceiptRequest request) {
+            @Valid @ModelAttribute CreateSiteDeliveryReceiptRequest request) {
 
         SiteDeliveryReceiptResponse response =
                 service.uploadReceipt(request);

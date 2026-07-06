@@ -18,7 +18,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.jala.backend.storage.enums.StorageFolder;
+import com.jala.backend.storage.enums.StorageModule;
+import com.jala.backend.storage.service.StorageService;
+import com.jala.backend.storage.util.FileNameGenerator;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +41,8 @@ public class SiteDeliveryReceiptServiceImpl
     private final SiteDeliveryReceiptMapper mapper;
 
     private final UserRepository userRepository;
+
+    private final StorageService storageService;
 
     @Override
     @Transactional
@@ -57,9 +64,46 @@ public class SiteDeliveryReceiptServiceImpl
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Site delivery not found."));
+        var site = siteDelivery.getSite();
+        String originalFileName = request.getFile().getOriginalFilename();
+
+        assert originalFileName != null;
+        String extension = originalFileName.substring(
+                originalFileName.lastIndexOf('.') + 1
+        );
+
+        long sequence =
+                repository.countBySiteDeliveryIdAndStatus(
+                        siteDelivery.getId(),
+                        FeedDeliveryStatus.ACTIVE
+                ) + 1;
+
+        String fileName =
+                FileNameGenerator.generateEntityFileName(
+                        site.getSiteCode(),
+                        site.getSiteName(),
+                        1,
+                        LocalDate.now(),
+                        StorageModule.RECEIPT,
+                        (int) sequence,
+                        extension
+                );
+        log.info("Generated file name : {}", fileName);
+
+        String photoUrl =
+                storageService.upload(
+                        request.getFile(),
+                        StorageFolder.RECEIPTS,
+                        siteDelivery.getId().toString(),
+                        fileName
+                );
+
+        log.info("Receipt uploaded to Storage : {}", photoUrl);
 
         SiteDeliveryReceipt receipt =
                 mapper.toEntity(request);
+
+        receipt.setPhotoPath(photoUrl);
 
         receipt.setSiteDelivery(siteDelivery);
 

@@ -28,13 +28,18 @@ public class StorageController {
     public ResponseEntity<ApiResponse<FileUploadResponse>> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam("folder") StorageFolder folder,
-            @RequestParam("entityId") String entityId,
-            @RequestParam("fileName") String fileName) {
+            @RequestParam("entityId") String entityId) {
 
-        String fileUrl = storageService.upload(file, folder, entityId, fileName);
+        String fileUrl =
+                storageService.upload(
+                        file,
+                        folder,
+                        entityId,
+                        file.getOriginalFilename()
+                );
 
         FileUploadResponse response = FileUploadResponse.builder()
-                .fileName(fileName)
+                .fileName(file.getOriginalFilename())
                 .fileUrl(fileUrl)
                 .build();
 
