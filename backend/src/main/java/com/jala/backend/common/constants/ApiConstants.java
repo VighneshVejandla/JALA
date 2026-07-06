@@ -35,4 +35,6 @@ public final class ApiConstants {
     public static final String HARVEST_BASE_URL = API_V1 + "/harvests";
 
     public static final String DASHBOARD_BASE_URL = API_V1 + "/dashboard";
+
+    public static final String ANALYTICS_BASE_URL = API_V1 + "/analytics";
 }

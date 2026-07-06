@@ -5,6 +5,8 @@ import com.jala.backend.harvest.enums.HarvestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,4 +45,74 @@ public interface HarvestRepository
     findFirstByPondCyclePondIdAndStatusOrderByHarvestDateDescUploadedAtDesc(
             UUID pondId,
             HarvestStatus status);
+
+    @Query("""
+SELECT COUNT(h)
+FROM Harvest h
+WHERE h.pondCycle.pond.id=:pondId
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    Integer getHarvestCountByPond(
+            UUID pondId);
+
+    @Query("""
+SELECT COALESCE(SUM(h.harvestQuantityKg),0)
+FROM Harvest h
+WHERE h.pondCycle.pond.id=:pondId
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    BigDecimal getTotalHarvestKg(
+            UUID pondId);
+
+    @Query("""
+SELECT COALESCE(AVG(h.harvestQuantityKg),0)
+FROM Harvest h
+WHERE h.pondCycle.pond.id=:pondId
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    BigDecimal getAverageHarvestKg(
+            UUID pondId);
+
+    @Query("""
+SELECT COALESCE(SUM(h.totalAmount),0)
+FROM Harvest h
+WHERE h.pondCycle.pond.id=:pondId
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    BigDecimal getTotalRevenue(
+            UUID pondId);
+
+    @Query("""
+SELECT COUNT(h)
+FROM Harvest h
+WHERE h.pondCycle.pond.site.id=:siteId
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    Integer getHarvestCountBySite(
+            UUID siteId);
+
+    @Query("""
+SELECT COALESCE(SUM(h.harvestQuantityKg),0)
+FROM Harvest h
+WHERE h.pondCycle.pond.site.id=:siteId
+AND h.harvestDate BETWEEN :startDate AND :endDate
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    BigDecimal getSiteHarvestBetweenDates(
+            UUID siteId,
+            LocalDate startDate,
+            LocalDate endDate);
+
+    @Query("""
+SELECT COALESCE(SUM(h.totalAmount),0)
+FROM Harvest h
+WHERE h.pondCycle.pond.site.id=:siteId
+AND h.harvestDate BETWEEN :startDate AND :endDate
+AND h.status=com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+""")
+    BigDecimal getSiteRevenueBetweenDates(
+            UUID siteId,
+            LocalDate startDate,
+            LocalDate endDate);
+
 }
