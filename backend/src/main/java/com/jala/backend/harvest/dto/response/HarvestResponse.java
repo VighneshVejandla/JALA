@@ -17,17 +17,8 @@ public class HarvestResponse {
 
     private LocalDate harvestDate;
 
-    /**
-     * Always returned in KG.
-     */
     private BigDecimal harvestQuantityKg;
 
-    /**
-     * Display value for UI.
-     * Example:
-     * 850 KG
-     * 1.25 Tons (1250 KG)
-     */
     private String quantityDisplay;
 
     private String billPhotoPath;
@@ -47,5 +38,11 @@ public class HarvestResponse {
     private String uploadedByEmployeeCode;
 
     private LocalDateTime uploadedAt;
+
+    private String cancelledByEmployeeCode;
+
+    private LocalDateTime cancelledAt;
+
+    private String cancellationReason;
 
 }

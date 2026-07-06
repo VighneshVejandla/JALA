@@ -3,6 +3,7 @@ package com.jala.backend.harvest.repository;
 import com.jala.backend.harvest.entity.Harvest;
 import com.jala.backend.harvest.enums.HarvestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,5 +28,19 @@ public interface HarvestRepository
 
     Optional<Harvest> findByPondCycleIdAndStatus(
             UUID pondCycleId,
+            HarvestStatus status);
+
+    @Query("""
+        SELECT COUNT(h)
+        FROM Harvest h
+        WHERE h.pondCycle.pond.id = :pondId
+        AND h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+        """)
+    Integer getHarvestCount(
+            UUID pondId);
+
+    Optional<Harvest>
+    findFirstByPondCyclePondIdAndStatusOrderByHarvestDateDescUploadedAtDesc(
+            UUID pondId,
             HarvestStatus status);
 }
