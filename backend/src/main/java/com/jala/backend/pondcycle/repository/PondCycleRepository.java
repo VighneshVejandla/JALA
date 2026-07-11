@@ -1,6 +1,5 @@
 package com.jala.backend.pondcycle.repository;
 
-import com.jala.backend.feedentry.enums.FeedEntryStatus;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,5 +23,9 @@ public interface PondCycleRepository
             UUID pondId,
             PondCycleStatus status
     );
+
+    long countByPondSiteIdAndStatus(
+            UUID siteId,
+            PondCycleStatus status);
 
 }

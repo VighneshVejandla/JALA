@@ -41,4 +41,10 @@ public final class ApiConstants {
     public static final String HISTORY_BASE_URL = API_V1 + "/history";
 
     public static final String REPORTS_BASE_URL = API_V1 + "/reports";
+
+    public static final String NOTIFICATION_BASE_URL = API_V1 + "/notifications";
+
+    public static final String SEARCH_BASE_URL = API_V1 + "/search";
+
+    public static final String EXPORT_BASE_URL =  API_V1 + "/export";
 }

@@ -63,6 +63,19 @@ public interface MedicineRepository
     LocalDateTime getLastMedicineDate(
             UUID pondCycleId);
 
+    @Query("""
+        SELECT m
+        FROM MedicineEntry m
+        WHERE m.status =
+              com.jala.backend.medicine.enums.MedicineStatus.ACTIVE
+        AND (
+            LOWER(COALESCE(m.remarks,'')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+        ORDER BY m.createdAt DESC
+        """)
+    List<MedicineEntry> search(
+            String keyword);
+
     long countByPondCycleIdAndStatus(
             UUID pondCycleId,
             MedicineStatus status);

@@ -1,27 +1,28 @@
 package com.jala.backend.feedentry.service;
 
+import com.jala.backend.common.exception.BadRequestException;
+import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.feedentry.dto.request.CreateFeedEntryRequest;
 import com.jala.backend.feedentry.dto.request.UpdateFeedEntryRequest;
 import com.jala.backend.feedentry.dto.response.FeedEntryResponse;
+import com.jala.backend.feedentry.entity.FeedEntry;
 import com.jala.backend.feedentry.enums.FeedEntryStatus;
 import com.jala.backend.feedentry.mapper.FeedEntryMapper;
 import com.jala.backend.feedentry.repository.FeedEntryRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import com.jala.backend.common.exception.BadRequestException;
-import com.jala.backend.common.exception.ResourceNotFoundException;
-import com.jala.backend.feedentry.entity.FeedEntry;
 import com.jala.backend.feedschedule.entity.FeedSchedule;
 import com.jala.backend.feedschedule.repository.FeedScheduleRepository;
+import com.jala.backend.notification.service.NotificationService;
 import com.jala.backend.pondcycle.entity.PondCycle;
+import com.jala.backend.pond.entity.Pond;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
 import com.jala.backend.user.entity.User;
 import com.jala.backend.user.repository.UserRepository;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -45,6 +46,8 @@ public class FeedEntryServiceImpl
     private final FeedEntryMapper mapper;
 
     private final UserRepository userRepository;
+
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -106,6 +109,16 @@ public class FeedEntryServiceImpl
         entry.setCreatedBy(worker);
 
         FeedEntry saved = repository.save(entry);
+
+        Pond pond = cycle.getPond();
+
+        notificationService.createFeedNotification(
+                cycle.getPond().getSite().getId(),
+                cycle.getPond().getId(),
+                cycle.getPond().getSite().getSiteCode(),
+                cycle.getPond().getPondCode(),
+                schedule.getSessionNumber(),
+                request.getFeedQuantityKg().toPlainString());
 
         log.info("Feed entry created successfully");
 

@@ -1,22 +1,20 @@
 package com.jala.backend.feedinventory.service;
 
 import com.jala.backend.common.exception.BadRequestException;
-import com.jala.backend.feedinventory.dto.response.FeedInventoryResponse;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.feedinventory.dto.response.FeedInventoryResponse;
 import com.jala.backend.feedinventory.entity.FeedInventory;
 import com.jala.backend.feedinventory.mapper.FeedInventoryMapper;
 import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
-import com.jala.backend.site.entity.Site;
+import com.jala.backend.notification.service.NotificationService;
 import com.jala.backend.site.repository.SiteRepository;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +28,12 @@ public class FeedInventoryServiceImpl
 
     private final SiteRepository siteRepository;
 
+    private final NotificationService notificationService;
+
     private final FeedInventoryMapper mapper;
+
+    private static final BigDecimal LOW_STOCK_THRESHOLD =
+            BigDecimal.valueOf(150);
 
     @Override
     @Transactional(readOnly = true)
@@ -76,6 +79,8 @@ public class FeedInventoryServiceImpl
 
         inventory.setUpdatedAt(LocalDateTime.now());
 
+
+
         repository.save(inventory);
     }
 
@@ -107,6 +112,20 @@ public class FeedInventoryServiceImpl
                         .subtract(quantityKg));
 
         inventory.setUpdatedAt(LocalDateTime.now());
+
+        repository.save(inventory);
+
+        if (inventory.getAvailableKg()
+                .compareTo(LOW_STOCK_THRESHOLD) <= 0) {
+
+            notificationService.createInventoryNotification(
+                    inventory.getSite().getId(),
+                    inventory.getSite().getSiteCode(),
+                    inventory.getAvailableKg(),
+                    LOW_STOCK_THRESHOLD);
+        }
+
+
 
         repository.save(inventory);
     }

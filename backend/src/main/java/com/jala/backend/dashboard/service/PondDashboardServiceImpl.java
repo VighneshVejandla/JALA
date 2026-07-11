@@ -1,20 +1,27 @@
 package com.jala.backend.dashboard.service;
 
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.dashboard.dto.response.HomeDashboardResponse;
 import com.jala.backend.dashboard.dto.response.PondDashboardResponse;
 import com.jala.backend.feedentry.enums.FeedEntryStatus;
 import com.jala.backend.feedentry.repository.FeedEntryRepository;
+import com.jala.backend.feedinventory.entity.FeedInventory;
+import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
+import com.jala.backend.harvest.entity.Harvest;
+import com.jala.backend.harvest.enums.HarvestStatus;
 import com.jala.backend.harvest.repository.HarvestRepository;
 import com.jala.backend.medicine.enums.MedicineStatus;
 import com.jala.backend.medicine.repository.MedicineRepository;
 import com.jala.backend.medicinephoto.repository.MedicinePhotoRepository;
+import com.jala.backend.notification.enums.NotificationStatus;
+import com.jala.backend.notification.repository.NotificationRepository;
 import com.jala.backend.pond.entity.Pond;
 import com.jala.backend.pond.repository.PondRepository;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
-import com.jala.backend.harvest.entity.Harvest;
-import com.jala.backend.harvest.enums.HarvestStatus;
+import com.jala.backend.site.entity.Site;
+import com.jala.backend.site.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,6 +50,12 @@ public class PondDashboardServiceImpl
     private final MedicinePhotoRepository medicinePhotoRepository;
 
     private final HarvestRepository harvestRepository;
+
+    private final SiteRepository siteRepository;
+
+    private final FeedInventoryRepository feedInventoryRepository;
+
+    private final NotificationRepository notificationRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -198,5 +211,83 @@ public class PondDashboardServiceImpl
         return cycle.getSpecies() != null
                 && cycle.getStockingDate() != null
                 && cycle.getShrimpCount() != null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HomeDashboardResponse getHomeDashboard(
+            UUID siteId) {
+
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Site not found."));
+
+        FeedInventory inventory =
+                feedInventoryRepository.findBySiteId(siteId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Feed inventory not found."));
+
+        Long totalPonds =
+                pondRepository.countBySiteId(siteId);
+
+        Long activeCycles =
+                pondCycleRepository.countByPondSiteIdAndStatus(
+                        siteId,
+                        PondCycleStatus.ACTIVE);
+
+        BigDecimal todayFeedKg =
+                feedEntryRepository.getSiteFeedForDate(
+                        siteId,
+                        LocalDate.now());
+
+        BigDecimal todayHarvestKg =
+                harvestRepository.getTodayHarvestKg(
+                        siteId,
+                        LocalDate.now());
+
+        BigDecimal todayRevenue =
+                harvestRepository.getTodayRevenue(
+                        siteId,
+                        LocalDate.now());
+
+        Long unreadNotifications =
+                notificationRepository.countBySiteIdAndStatus(
+                        siteId,
+                        NotificationStatus.UNREAD);
+
+        BigDecimal threshold =
+                BigDecimal.valueOf(150);
+
+        boolean lowInventory =
+                inventory.getAvailableKg()
+                        .compareTo(threshold) <= 0;
+
+        return HomeDashboardResponse.builder()
+
+                .siteId(site.getId())
+                .siteCode(site.getSiteCode())
+                .siteName(site.getSiteName())
+
+                .totalPonds(totalPonds)
+
+                .activeCycles(activeCycles)
+
+                .todayFeedKg(todayFeedKg)
+
+                .availableFeedKg(
+                        inventory.getAvailableKg())
+
+                .todayHarvestKg(todayHarvestKg)
+
+                .todayRevenue(todayRevenue)
+
+                .unreadNotifications(
+                        unreadNotifications)
+
+                .lowInventory(lowInventory)
+
+                .build();
     }
 }

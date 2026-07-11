@@ -238,4 +238,17 @@ public interface FeedEntryRepository
     List<FeedEntry> findByPondCyclePondId(
             UUID pondId);
 
+    @Query("""
+        SELECT f
+        FROM FeedEntry f
+        WHERE f.status =
+              com.jala.backend.feedentry.enums.FeedEntryStatus.ACTIVE
+        AND (
+            LOWER(COALESCE(f.remarks,'')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+        ORDER BY f.feedDate DESC
+        """)
+    List<FeedEntry> search(
+            String keyword);
+
 }

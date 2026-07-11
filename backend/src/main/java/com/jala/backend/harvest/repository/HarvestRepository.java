@@ -57,6 +57,42 @@ public interface HarvestRepository
             UUID pondId);
 
     @Query("""
+        SELECT COALESCE(SUM(h.harvestQuantityKg),0)
+        FROM Harvest h
+        WHERE h.pondCycle.pond.site.id = :siteId
+        AND h.harvestDate = :date
+        AND h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+        """)
+    BigDecimal getTodayHarvestKg(
+            UUID siteId,
+            LocalDate date);
+
+    @Query("""
+        SELECT COALESCE(SUM(h.totalAmount),0)
+        FROM Harvest h
+        WHERE h.pondCycle.pond.site.id = :siteId
+        AND h.harvestDate = :date
+        AND h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+        """)
+    BigDecimal getTodayRevenue(
+            UUID siteId,
+            LocalDate date);
+
+    @Query("""
+        SELECT h
+        FROM Harvest h
+        WHERE h.status =
+              com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+        AND (
+            LOWER(COALESCE(h.buyerName,'')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(COALESCE(h.remarks,'')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+        ORDER BY h.harvestDate DESC
+        """)
+    List<Harvest> search(
+            String keyword);
+
+    @Query("""
             SELECT h
             FROM Harvest h
             WHERE h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
