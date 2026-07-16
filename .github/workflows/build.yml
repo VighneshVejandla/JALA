@@ -56,6 +56,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
@@ -72,6 +75,6 @@ jobs:
         run: |
           mvn -B verify \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=VighneshVejandla_JALA \
-            -Dsonar.organization=vighneshvejandla \
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+            -Dsonar.organization=$SONAR_ORGANIZATION \
             -Dsonar.host.url=https://sonarcloud.io
