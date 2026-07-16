@@ -41,6 +41,12 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      - name: Create .env.properties
+        run: |
+          cat <<EOF > .env.properties
+          ${{ secrets.ENV_FILE }}
+          EOF
+
       - name: Build & Analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
