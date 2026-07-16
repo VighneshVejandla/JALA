@@ -1,3 +1,5 @@
+#D:\JALA\backend\src\main\resources\application-dev.yml
+
 spring:
 
   datasource:
@@ -28,7 +30,7 @@ logging:
     org.hibernate.SQL: DEBUG
     root: INFO
 
-  test:
+test:
     jwt: ${JWT_EXPIRATION:NOT_FOUND}
 
 jwt:

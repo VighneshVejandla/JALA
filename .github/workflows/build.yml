@@ -1,3 +1,4 @@
+#D:\JALA\.github\workflows\build.yml
 name: Build & SonarCloud
 
 on:
@@ -13,7 +14,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     defaults:
@@ -21,7 +21,6 @@ jobs:
         working-directory: backend
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -41,18 +40,38 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Create .env.properties
+      # Verify that GitHub Secrets are available
+      - name: Verify Environment Variables
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
         run: |
-          cat <<EOF > .env.properties
-          ${{ secrets.ENV_FILE }}
-          EOF
+          echo "DB_HOST=${DB_HOST:+SET}"
+          echo "DB_PORT=${DB_PORT:+SET}"
+          echo "JWT_EXPIRATION=${JWT_EXPIRATION:+SET}"
 
       - name: Build & Analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+
         run: |
           mvn -B verify \
-          org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-          -Dsonar.projectKey=VighneshVejandla_JALA
+            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=VighneshVejandla_JALA \
+            -Dsonar.organization=vighneshvejandla \
+            -Dsonar.host.url=https://sonarcloud.io

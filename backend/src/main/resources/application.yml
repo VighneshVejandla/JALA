@@ -1,3 +1,5 @@
+#  D:\JALA\backend\src\main\resources\application.yml
+
 spring:
   application:
     name: JALA
@@ -30,6 +32,9 @@ springdoc:
 logging:
   level:
     org.springframework.security: DEBUG
+
+test:
+  jwt: ${JWT_EXPIRATION:NOT_FOUND}
 
 supabase:
   url: ${SUPABASE_URL}
