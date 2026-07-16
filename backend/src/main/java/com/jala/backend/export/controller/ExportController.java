@@ -18,6 +18,8 @@ public class ExportController {
 
     private final ExportService service;
 
+    private static final String MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     @PostMapping("/revenue/excel")
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<byte[]> exportRevenue(
@@ -31,8 +33,7 @@ public class ExportController {
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=Revenue_Report.xlsx")
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(MEDIA_TYPE))
                 .body(file);
     }
 
@@ -49,8 +50,7 @@ public class ExportController {
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=Feed_Report.xlsx")
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(MEDIA_TYPE))
                 .body(file);
     }
 
@@ -67,8 +67,7 @@ public class ExportController {
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=Medicine_Report.xlsx")
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(MEDIA_TYPE))
                 .body(file);
     }
 

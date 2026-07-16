@@ -2,6 +2,7 @@ package com.jala.backend.site.service;
 
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feedinventory.entity.FeedInventory;
 import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
 import com.jala.backend.site.dto.request.CreateSiteRequest;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,7 +48,7 @@ public class SiteServiceImpl implements SiteService {
                 .totalReceivedKg(BigDecimal.ZERO)
                 .totalConsumedKg(BigDecimal.ZERO)
                 .availableKg(BigDecimal.ZERO)
-                .updatedAt(LocalDateTime.now())
+                .updatedAt(DateTimeUtil.now())
                 .build();
 
         feedInventoryRepository.save(inventory);

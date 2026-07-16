@@ -1,6 +1,7 @@
 package com.jala.backend.feeddeliveryreceipt.service;
 
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feeddelivery.entity.SiteDelivery;
 import com.jala.backend.feeddelivery.enums.FeedDeliveryStatus;
 import com.jala.backend.feeddelivery.repository.SiteDeliveryRepository;
@@ -10,6 +11,10 @@ import com.jala.backend.feeddeliveryreceipt.dto.response.SiteDeliveryReceiptResp
 import com.jala.backend.feeddeliveryreceipt.entity.SiteDeliveryReceipt;
 import com.jala.backend.feeddeliveryreceipt.mapper.SiteDeliveryReceiptMapper;
 import com.jala.backend.feeddeliveryreceipt.repository.SiteDeliveryReceiptRepository;
+import com.jala.backend.storage.enums.StorageFolder;
+import com.jala.backend.storage.enums.StorageModule;
+import com.jala.backend.storage.service.StorageService;
+import com.jala.backend.storage.util.FileNameGenerator;
 import com.jala.backend.user.entity.User;
 import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.jala.backend.storage.enums.StorageFolder;
-import com.jala.backend.storage.enums.StorageModule;
-import com.jala.backend.storage.service.StorageService;
-import com.jala.backend.storage.util.FileNameGenerator;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -82,7 +82,7 @@ public class SiteDeliveryReceiptServiceImpl
                 FileNameGenerator.generateEntityFileName(
                         site.getSiteCode(),
                         site.getSiteName(),
-                        LocalDate.now(),
+                        DateTimeUtil.today(),
                         StorageModule.RECEIPT,
                         (int) sequence,
                         extension
@@ -108,7 +108,7 @@ public class SiteDeliveryReceiptServiceImpl
 
         receipt.setUploadedBy(user);
 
-        receipt.setUploadedAt(LocalDateTime.now());
+        receipt.setUploadedAt(DateTimeUtil.now());
 
         receipt.setStatus(FeedDeliveryStatus.ACTIVE);
 
@@ -158,7 +158,7 @@ public class SiteDeliveryReceiptServiceImpl
 
         receipt.setCancelledBy(user);
 
-        receipt.setCancelledAt(LocalDateTime.now());
+        receipt.setCancelledAt(DateTimeUtil.now());
 
         receipt.setCancellationReason(
                 request.getCancellationReason());
@@ -181,7 +181,7 @@ public class SiteDeliveryReceiptServiceImpl
                 FeedDeliveryStatus.ACTIVE);
 
         receipt.setRestoredAt(
-                LocalDateTime.now());
+                DateTimeUtil.now());
 
         repository.save(receipt);
 

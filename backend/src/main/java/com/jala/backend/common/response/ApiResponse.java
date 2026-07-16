@@ -1,5 +1,6 @@
 package com.jala.backend.common.response;
 
+import com.jala.backend.common.util.DateTimeUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,5 +21,5 @@ public class ApiResponse<T> {
     private T data;
 
     @Builder.Default
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp = DateTimeUtil.now();
 }

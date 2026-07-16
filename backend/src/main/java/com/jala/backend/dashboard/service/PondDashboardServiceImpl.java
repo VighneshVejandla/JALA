@@ -1,6 +1,7 @@
 package com.jala.backend.dashboard.service;
 
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.dashboard.dto.response.HomeDashboardResponse;
 import com.jala.backend.dashboard.dto.response.PondDashboardResponse;
 import com.jala.backend.feedentry.enums.FeedEntryStatus;
@@ -82,13 +83,13 @@ public class PondDashboardServiceImpl
             daysSinceStocking =
                     ChronoUnit.DAYS.between(
                             activeCycle.getStockingDate(),
-                            LocalDate.now());
+                            DateTimeUtil.today());
         }
 
         BigDecimal todayFeedKg =
                 feedEntryRepository.getTodayFeedKg(
                         activeCycle.getId(),
-                        LocalDate.now());
+                        DateTimeUtil.today());
 
         BigDecimal totalFeedKg =
                 feedEntryRepository.getTotalFeedKg(
@@ -97,7 +98,7 @@ public class PondDashboardServiceImpl
         Integer todayFeedEntries =
                 feedEntryRepository.countByPondCycleIdAndFeedDateAndStatus(
                         activeCycle.getId(),
-                        LocalDate.now(),
+                        DateTimeUtil.today(),
                         FeedEntryStatus.ACTIVE);
         Integer medicineEntryCount =
                 medicineRepository.getMedicineEntryCount(
@@ -240,17 +241,17 @@ public class PondDashboardServiceImpl
         BigDecimal todayFeedKg =
                 feedEntryRepository.getSiteFeedForDate(
                         siteId,
-                        LocalDate.now());
+                        DateTimeUtil.today());
 
         BigDecimal todayHarvestKg =
                 harvestRepository.getTodayHarvestKg(
                         siteId,
-                        LocalDate.now());
+                        DateTimeUtil.today());
 
         BigDecimal todayRevenue =
                 harvestRepository.getTodayRevenue(
                         siteId,
-                        LocalDate.now());
+                        DateTimeUtil.today());
 
         Long unreadNotifications =
                 notificationRepository.countBySiteIdAndStatus(

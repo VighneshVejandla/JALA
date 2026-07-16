@@ -1,6 +1,7 @@
 package com.jala.backend.notification.service;
 
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.notification.dto.response.NotificationResponse;
 import com.jala.backend.notification.dto.response.NotificationSummaryResponse;
 import com.jala.backend.notification.entity.Notification;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,7 +59,7 @@ public class NotificationServiceImpl
                         .pondId(pondId)
 
                         .createdAt(
-                                LocalDateTime.now())
+                                DateTimeUtil.now())
 
                         .build();
 
@@ -110,7 +110,8 @@ public class NotificationServiceImpl
                 .builder()
 
                 .unreadCount(
-                        getUnreadCount())
+                        notificationRepository.countByStatus(
+                                NotificationStatus.UNREAD))
 
                 .notifications(
                         responses)
@@ -128,7 +129,6 @@ public class NotificationServiceImpl
     }
 
     @Override
-    @Transactional
     public void markAsRead(
             UUID notificationId) {
 
@@ -143,7 +143,7 @@ public class NotificationServiceImpl
                 NotificationStatus.READ);
 
         notification.setReadAt(
-                LocalDateTime.now());
+                DateTimeUtil.now());
 
         notificationRepository.save(
                 notification);
@@ -195,7 +195,7 @@ public class NotificationServiceImpl
 
                         .status(NotificationStatus.UNREAD)
 
-                        .createdAt(LocalDateTime.now())
+                        .createdAt(DateTimeUtil.now())
 
                         .build();
 

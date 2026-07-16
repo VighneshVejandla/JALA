@@ -2,6 +2,7 @@ package com.jala.backend.medicinephoto.service;
 
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.medicine.entity.MedicineEntry;
 import com.jala.backend.medicine.enums.MedicineStatus;
 import com.jala.backend.medicine.repository.MedicineRepository;
@@ -23,7 +24,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -85,7 +85,7 @@ public class MedicinePhotoServiceImpl
                 FileNameGenerator.generateEntityFileName(
                         site.getSiteCode(),
                         site.getSiteName(),
-                        LocalDate.now(),
+                        DateTimeUtil.today(),
                         StorageModule.MEDICINE,
                         (int) sequence,
                         extension
@@ -120,7 +120,7 @@ public class MedicinePhotoServiceImpl
 
         photo.setUploadedBy(user);
 
-        photo.setUploadedAt(LocalDateTime.now());
+        photo.setUploadedAt(DateTimeUtil.now());
 
         MedicinePhoto saved =
                 repository.save(photo);

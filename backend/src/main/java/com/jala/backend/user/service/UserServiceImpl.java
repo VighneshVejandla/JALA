@@ -33,6 +33,8 @@ public class UserServiceImpl implements UserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private static final String USER_NOT_FOUND = "User not found";
+
     private void validateFirstAdminCreation(CreateUserRequest request) {
 
         if (!adminExists()) {
@@ -110,7 +112,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         return userMapper.toResponse(user);
     }
@@ -178,7 +180,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         user.setIsActive(true);
 
@@ -193,7 +195,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         user.setIsActive(false);
 
@@ -206,11 +208,10 @@ public class UserServiceImpl implements UserService {
 
         return userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean adminExists() {
         return userRepository.existsByRole_Name("ADMIN");
     }

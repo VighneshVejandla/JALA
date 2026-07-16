@@ -225,27 +225,24 @@ public class HistoryServiceImpl
 
         feedEntryRepository
                 .findByPondCyclePondId(pondId)
-                .forEach(feed -> {
-
-                    timeline.add(
-                            PondTimelineItemResponse.builder()
-                                    .referenceId(feed.getId())
-                                    .referenceType("FEED")
-                                    .eventTime(
-                                            feed.getFeedDate()
-                                                    .atTime(LocalTime.NOON))
-                                    .eventType("FEED")
-                                    .title("Feed Entry")
-                                    .description(
-                                            feed.getFeedQuantityKg()
-                                                    + " KG | Session "
-                                                    + feed.getFeedSchedule()
-                                                    .getSessionNumber())
-                                    .cycleNumber(
-                                            feed.getPondCycle()
-                                                    .getCycleNumber())
-                                    .build());
-                });
+                .forEach(feed -> timeline.add(
+                        PondTimelineItemResponse.builder()
+                                .referenceId(feed.getId())
+                                .referenceType("FEED")
+                                .eventTime(
+                                        feed.getFeedDate()
+                                                .atTime(LocalTime.NOON))
+                                .eventType("FEED")
+                                .title("Feed Entry")
+                                .description(
+                                        feed.getFeedQuantityKg()
+                                                + " KG | Session "
+                                                + feed.getFeedSchedule()
+                                                .getSessionNumber())
+                                .cycleNumber(
+                                        feed.getPondCycle()
+                                                .getCycleNumber())
+                                .build()));
 
         // -------------------------------------------------
         // Medicine Entries
@@ -254,25 +251,22 @@ public class HistoryServiceImpl
         medicineRepository
                 .findByPondCyclePondIdOrderByCreatedAtDesc(
                         pondId)
-                .forEach(medicine -> {
-
-                    timeline.add(
-                            PondTimelineItemResponse.builder()
-                                    .referenceId(medicine.getId())
-                                    .referenceType("MEDICINE")
-                                    .eventTime(
-                                            medicine.getCreatedAt())
-                                    .eventType("MEDICINE")
-                                    .title("Medicine Added")
-                                    .description(
-                                            medicine.getQuantity()
-                                                    + " "
-                                                    + medicine.getUnit())
-                                    .cycleNumber(
-                                            medicine.getPondCycle()
-                                                    .getCycleNumber())
-                                    .build());
-                });
+                .forEach(medicine -> timeline.add(
+                        PondTimelineItemResponse.builder()
+                                .referenceId(medicine.getId())
+                                .referenceType("MEDICINE")
+                                .eventTime(
+                                        medicine.getCreatedAt())
+                                .eventType("MEDICINE")
+                                .title("Medicine Added")
+                                .description(
+                                        medicine.getQuantity()
+                                                + " "
+                                                + medicine.getUnit())
+                                .cycleNumber(
+                                        medicine.getPondCycle()
+                                                .getCycleNumber())
+                                .build()));
 
         // -------------------------------------------------
         // Harvests
@@ -280,24 +274,21 @@ public class HistoryServiceImpl
 
         harvestRepository
                 .findByPondCyclePondId(pondId)
-                .forEach(harvest -> {
-
-                    timeline.add(
-                            PondTimelineItemResponse.builder()
-                                    .referenceId(harvest.getId())
-                                    .referenceType("HARVEST")
-                                    .eventTime(
-                                            harvest.getUploadedAt())
-                                    .eventType("HARVEST")
-                                    .title("Harvest")
-                                    .description(
-                                            harvest.getHarvestQuantityKg()
-                                                    + " KG")
-                                    .cycleNumber(
-                                            harvest.getPondCycle()
-                                                    .getCycleNumber())
-                                    .build());
-                });
+                .forEach(harvest -> timeline.add(
+                        PondTimelineItemResponse.builder()
+                                .referenceId(harvest.getId())
+                                .referenceType("HARVEST")
+                                .eventTime(
+                                        harvest.getUploadedAt())
+                                .eventType("HARVEST")
+                                .title("Harvest")
+                                .description(
+                                        harvest.getHarvestQuantityKg()
+                                                + " KG")
+                                .cycleNumber(
+                                        harvest.getPondCycle()
+                                                .getCycleNumber())
+                                .build()));
 
         timeline.sort(
                 Comparator.comparing(

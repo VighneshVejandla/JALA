@@ -16,7 +16,7 @@ public class PdfExportUtil {
     private static void addTitle(
             Document document,
             String title)
-            throws Exception {
+            throws DocumentException {
 
         Font titleFont =
                 new Font(Font.HELVETICA, 18, Font.BOLD);
@@ -35,7 +35,7 @@ public class PdfExportUtil {
             Document document,
             String key,
             String value)
-            throws Exception {
+            throws DocumentException {
 
         Font font =
                 new Font(Font.HELVETICA, 12);

@@ -2,6 +2,7 @@ package com.jala.backend.feedentry.service;
 
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feedentry.dto.request.CreateFeedEntryRequest;
 import com.jala.backend.feedentry.dto.request.UpdateFeedEntryRequest;
 import com.jala.backend.feedentry.dto.response.FeedEntryResponse;
@@ -12,8 +13,8 @@ import com.jala.backend.feedentry.repository.FeedEntryRepository;
 import com.jala.backend.feedschedule.entity.FeedSchedule;
 import com.jala.backend.feedschedule.repository.FeedScheduleRepository;
 import com.jala.backend.notification.service.NotificationService;
-import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pond.entity.Pond;
+import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
 import com.jala.backend.user.entity.User;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -208,7 +208,7 @@ public class FeedEntryServiceImpl
 
         entry.setCancelledBy(user);
 
-        entry.setCancelledAt(LocalDateTime.now());
+        entry.setCancelledAt(DateTimeUtil.now());
 
         entry.setCancellationReason(reason);
 

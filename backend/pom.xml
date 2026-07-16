@@ -24,6 +24,12 @@
 		<java.version>21</java.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<jjwt.version>0.12.6</jjwt.version>
+
+		<sonar.organization>vighneshvejandla</sonar.organization>
+
+		<sonar.projectKey>jala-backend</sonar.projectKey>
+		<sonar.projectName>JALA Backend</sonar.projectName>
+		<sonar.host.url>http://localhost:9000</sonar.host.url>
 	</properties>
 
 	<dependencies>
@@ -165,6 +171,12 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>5.2.0.4988</version>
 			</plugin>
 
 			<plugin>

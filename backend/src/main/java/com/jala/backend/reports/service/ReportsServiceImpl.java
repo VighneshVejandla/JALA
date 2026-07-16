@@ -1,6 +1,7 @@
 package com.jala.backend.reports.service;
 
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feedentry.entity.FeedEntry;
 import com.jala.backend.feedentry.repository.FeedEntryRepository;
 import com.jala.backend.harvest.entity.Harvest;
@@ -47,8 +48,11 @@ public class ReportsServiceImpl
 
     private final MedicinePhotoRepository medicinePhotoRepository;
 
+    private static final String SITE_NOT_FOUND = "Site not found.";
+
+    private static final String POND_NOT_FOUND = "Pond not found.";
+
     @Override
-    @Transactional(readOnly = true)
     public RevenueReportResponse getRevenueReport(
             ReportFilterRequest request) {
 
@@ -59,8 +63,7 @@ public class ReportsServiceImpl
         Site site = siteRepository.findById(
                         request.getSiteId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Site not found."));
+                        new ResourceNotFoundException(SITE_NOT_FOUND));
 
         Pond pond = null;
 
@@ -69,8 +72,7 @@ public class ReportsServiceImpl
             pond = pondRepository.findById(
                             request.getPondId())
                     .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Pond not found."));
+                            new ResourceNotFoundException(POND_NOT_FOUND));
         }
 
         List<Harvest> harvests =
@@ -165,7 +167,6 @@ public class ReportsServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public FeedReportResponse getFeedReport(
             ReportFilterRequest request) {
 
@@ -176,8 +177,7 @@ public class ReportsServiceImpl
         Site site = siteRepository.findById(
                         request.getSiteId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Site not found."));
+                        new ResourceNotFoundException(SITE_NOT_FOUND));
 
         Pond pond = null;
 
@@ -186,8 +186,7 @@ public class ReportsServiceImpl
             pond = pondRepository.findById(
                             request.getPondId())
                     .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Pond not found."));
+                            new ResourceNotFoundException(POND_NOT_FOUND));
         }
 
         List<FeedEntry> entries =
@@ -385,8 +384,7 @@ public class ReportsServiceImpl
         Site site =
                 siteRepository.findById(siteId)
                         .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Site not found."));
+                                new ResourceNotFoundException(SITE_NOT_FOUND));
 
         ReportFilterRequest filter =
                 new ReportFilterRequest();
@@ -397,12 +395,12 @@ public class ReportsServiceImpl
 
         filter.setFromDate(
                 LocalDate.of(
-                        LocalDate.now().getYear(),
-                        1,
+                        DateTimeUtil.today().getYear(),
+                        Month.JANUARY,
                         1));
 
         filter.setToDate(
-                LocalDate.now());
+                DateTimeUtil.today());
 
         RevenueReportResponse revenue =
                 getRevenueReport(filter);
@@ -443,7 +441,6 @@ public class ReportsServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public MedicineReportResponse getMedicineReport(
             ReportFilterRequest request) {
 
@@ -454,8 +451,7 @@ public class ReportsServiceImpl
         Site site = siteRepository.findById(
                         request.getSiteId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Site not found."));
+                        new ResourceNotFoundException(SITE_NOT_FOUND));
 
         Pond pond = null;
 
@@ -464,8 +460,7 @@ public class ReportsServiceImpl
             pond = pondRepository.findById(
                             request.getPondId())
                     .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Pond not found."));
+                            new ResourceNotFoundException(POND_NOT_FOUND));
         }
 
         LocalDateTime fromDateTime =

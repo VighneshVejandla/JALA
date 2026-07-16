@@ -6,31 +6,29 @@ import com.jala.backend.storage.exception.FileStorageException;
 import java.time.LocalDate;
 import java.util.Locale;
 
-/**
- * Produces file names in the naming convention used across JALA modules.
- *
- * Business entity photos (medicine / receipt / harvest):
- *   SITE1_Vada_Palem_1_2026-07-05_medicine_001.webp
- *
- * User profile photos:
- *   DRV001_BalaRaju_profile.webp
- *
- * Callers (Medicine Photo Module, Site Delivery Receipt Module, etc.) generate
- * the file name with this class BEFORE calling storageService.upload(...).
- */
 public final class FileNameGenerator {
 
     private FileNameGenerator() {
     }
 
-    /**
-     * @param siteCode     e.g. "SITE1"
-     * @param siteName     e.g. "Vada Palem" (spaces are converted to underscores)
-     * @param date         the date the entry was recorded
-     * @param module       MEDICINE, RECEIPT, or HARVEST
-     * @param sequence     running sequence number for that entity/day, e.g. 1 -> "001"
-     * @param extension    jpg, jpeg, png, or webp (with or without leading dot)
-     */
+    private static String normalizeName(String value) {
+
+        String normalized = value
+                .trim()
+                .replaceAll("[^a-zA-Z0-9]", "_")
+                .replaceAll("_+", "_");
+
+        while (normalized.startsWith("_")) {
+            normalized = normalized.substring(1);
+        }
+
+        while (normalized.endsWith("_")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        return normalized;
+    }
+
     public static String generateEntityFileName(String siteCode,
                                                 String siteName,
                                                 LocalDate date,
@@ -50,11 +48,7 @@ public final class FileNameGenerator {
             throw new FileStorageException("Sequence number must not be negative");
         }
 
-        String normalizedSiteName = siteName
-                .trim()
-                .replaceAll("[^a-zA-Z0-9]", "_")
-                .replaceAll("_+", "_")
-                .replaceAll("^_+|_+$", "");
+        String normalizedSiteName = normalizeName(siteName);
 
         String normalizedExtension = normalizeExtension(extension);
 
@@ -88,11 +82,7 @@ public final class FileNameGenerator {
             throw new FileStorageException("Missing required fields for profile file name generation");
         }
 
-        String normalizedUserName = userName
-                .trim()
-                .replaceAll("[^a-zA-Z0-9]", "_")
-                .replaceAll("_+", "_")
-                .replaceAll("^_+|_+$", "");
+        String normalizedUserName = normalizeName(userName);
         String normalizedExtension = normalizeExtension(extension);
 
         return String.format(

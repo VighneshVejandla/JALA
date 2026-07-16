@@ -1,8 +1,5 @@
 spring:
 
-  config:
-    import: optional:file:backend/.env.properties
-
   datasource:
     url: ${SUPABASE_URL}
     username: ${DB_USERNAME}

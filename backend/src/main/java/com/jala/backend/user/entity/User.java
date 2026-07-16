@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -14,7 +17,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class User extends BaseEntity {
+public class User extends BaseEntity implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)

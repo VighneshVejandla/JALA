@@ -1,23 +1,22 @@
 package com.jala.backend.feeddelivery.service;
 
+import com.jala.backend.common.constants.FeedConstants;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
+import com.jala.backend.feeddelivery.dto.request.AddSiteDeliveryRequest;
 import com.jala.backend.feeddelivery.dto.request.CreateFeedDeliveryRequest;
 import com.jala.backend.feeddelivery.dto.response.FeedDeliveryResponse;
+import com.jala.backend.feeddelivery.dto.response.SiteDeliveryResponse;
 import com.jala.backend.feeddelivery.entity.FeedDelivery;
+import com.jala.backend.feeddelivery.entity.SiteDelivery;
 import com.jala.backend.feeddelivery.enums.FeedDeliveryStatus;
 import com.jala.backend.feeddelivery.mapper.FeedDeliveryMapper;
-import com.jala.backend.feeddelivery.repository.FeedDeliveryRepository;
-import com.jala.backend.feeddelivery.dto.request.AddSiteDeliveryRequest;
-import com.jala.backend.feeddelivery.dto.response.SiteDeliveryResponse;
-import com.jala.backend.feeddelivery.entity.SiteDelivery;
 import com.jala.backend.feeddelivery.mapper.SiteDeliveryMapper;
+import com.jala.backend.feeddelivery.repository.FeedDeliveryRepository;
 import com.jala.backend.feeddelivery.repository.SiteDeliveryRepository;
+import com.jala.backend.feedinventory.service.FeedInventoryService;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.repository.SiteRepository;
-import com.jala.backend.feedinventory.service.FeedInventoryService;
-import com.jala.backend.common.constants.FeedConstants;
-
-import java.math.BigDecimal;
 import com.jala.backend.user.entity.User;
 import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,7 +67,7 @@ public class FeedDeliveryServiceImpl implements FeedDeliveryService {
 
         delivery.setDeliveredBy(user);
 
-        delivery.setDeliveredAt(LocalDateTime.now());
+        delivery.setDeliveredAt(DateTimeUtil.now());
 
         delivery.setStatus(FeedDeliveryStatus.ACTIVE);
 

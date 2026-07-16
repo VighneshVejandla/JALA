@@ -2,6 +2,7 @@ package com.jala.backend.harvest.service;
 
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.harvest.dto.request.CancelHarvestRequest;
 import com.jala.backend.harvest.dto.request.CreateHarvestRequest;
 import com.jala.backend.harvest.dto.response.HarvestResponse;
@@ -27,8 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -107,7 +106,7 @@ public class HarvestServiceImpl implements HarvestService {
 
         harvest.setUploadedBy(user);
 
-        harvest.setUploadedAt(LocalDateTime.now());
+        harvest.setUploadedAt(DateTimeUtil.now());
 
         harvest.setStatus(HarvestStatus.ACTIVE);
 
@@ -198,7 +197,7 @@ public class HarvestServiceImpl implements HarvestService {
         harvest.setCancelledBy(user);
 
         harvest.setCancelledAt(
-                LocalDateTime.now());
+                DateTimeUtil.now());
 
         harvest.setCancellationReason(
                 request.getCancellationReason());

@@ -1,28 +1,26 @@
 package com.jala.backend.medicine.service;
 
+import com.jala.backend.common.exception.BadRequestException;
+import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.medicine.dto.request.CreateMedicineRequest;
 import com.jala.backend.medicine.dto.request.UpdateMedicineRequest;
 import com.jala.backend.medicine.dto.response.MedicineResponse;
-import com.jala.backend.medicine.mapper.MedicineMapper;
-import com.jala.backend.medicine.repository.MedicineRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import com.jala.backend.common.exception.BadRequestException;
-import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.medicine.entity.MedicineEntry;
 import com.jala.backend.medicine.enums.MedicineStatus;
+import com.jala.backend.medicine.mapper.MedicineMapper;
+import com.jala.backend.medicine.repository.MedicineRepository;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
 import com.jala.backend.user.entity.User;
 import com.jala.backend.user.repository.UserRepository;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +38,8 @@ public class MedicineServiceImpl
     private final UserRepository userRepository;
 
     private final MedicineMapper mapper;
+
+    private static final String USER_NOT_FOUND = "User not found.";
 
     @Override
     @Transactional
@@ -64,8 +64,7 @@ public class MedicineServiceImpl
         User user = userRepository
                 .findByEmployeeCode(authentication.getName())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         MedicineEntry entry = mapper.toEntity(request);
 
@@ -73,7 +72,7 @@ public class MedicineServiceImpl
 
         entry.setCreatedBy(user);
 
-        entry.setCreatedAt(LocalDateTime.now());
+        entry.setCreatedAt(DateTimeUtil.now());
 
         entry.setStatus(MedicineStatus.ACTIVE);
 
@@ -154,14 +153,13 @@ public class MedicineServiceImpl
         User user = userRepository
                 .findByEmployeeCode(authentication.getName())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         entry.setStatus(MedicineStatus.CANCELLED);
 
         entry.setCancelledBy(user);
 
-        entry.setCancelledAt(LocalDateTime.now());
+        entry.setCancelledAt(DateTimeUtil.now());
 
         entry.setCancellationReason(reason);
 
@@ -188,14 +186,13 @@ public class MedicineServiceImpl
         User user = userRepository
                 .findByEmployeeCode(authentication.getName())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         entry.setStatus(MedicineStatus.ACTIVE);
 
         entry.setRestoredBy(user);
 
-        entry.setRestoredAt(LocalDateTime.now());
+        entry.setRestoredAt(DateTimeUtil.now());
 
         entry.setRestorationReason(null);
 

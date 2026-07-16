@@ -3,7 +3,6 @@ package com.jala.backend.auth.jwt;
 import com.jala.backend.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 
 @Service
@@ -27,17 +27,16 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
 
-        Date now = new Date();
+        Instant now = Instant.now();
 
-        Date expiry = new Date(
-                now.getTime() + jwtProperties.getExpiration()
-        );
+        Instant expiry = now.plusMillis(
+                jwtProperties.getExpiration());
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .issuedAt(now)
-                .expiration(expiry)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -54,9 +53,11 @@ public class JwtService {
     }
 
     private boolean isTokenExpired(String token) {
+
         return extractAllClaims(token)
                 .getExpiration()
-                .before(new Date());
+                .toInstant()
+                .isBefore(Instant.now());
     }
 
     private Claims extractAllClaims(String token) {

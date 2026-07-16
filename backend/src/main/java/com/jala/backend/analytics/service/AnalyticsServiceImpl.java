@@ -1,12 +1,12 @@
 package com.jala.backend.analytics.service;
 
-import com.jala.backend.analytics.dto.response.FeedAnalyticsResponse;
+import com.jala.backend.analytics.dto.response.*;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feeddelivery.repository.SiteDeliveryRepository;
 import com.jala.backend.feedentry.repository.FeedEntryRepository;
-import com.jala.backend.analytics.dto.response.PondHarvestAnalyticsResponse;
-import com.jala.backend.analytics.dto.response.SiteHarvestAnalyticsResponse;
-import com.jala.backend.analytics.dto.response.AnalyticsDashboardResponse;
+import com.jala.backend.feedinventory.entity.FeedInventory;
+import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
 import com.jala.backend.harvest.entity.Harvest;
 import com.jala.backend.harvest.enums.HarvestStatus;
 import com.jala.backend.harvest.repository.HarvestRepository;
@@ -15,17 +15,12 @@ import com.jala.backend.pond.repository.PondRepository;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.site.entity.Site;
+import com.jala.backend.site.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.jala.backend.analytics.dto.response.SiteFeedAnalyticsResponse;
-import com.jala.backend.site.entity.Site;
-import com.jala.backend.site.repository.SiteRepository;
-import com.jala.backend.analytics.dto.response.InventoryAnalyticsResponse;
-import com.jala.backend.feedinventory.entity.FeedInventory;
-import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
-
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -53,6 +48,8 @@ public class AnalyticsServiceImpl
 
     private final HarvestRepository harvestRepository;
 
+    private static final String SITE_NOT_FOUND = "Site not found.";
+
     @Override
     @Transactional(readOnly = true)
     public FeedAnalyticsResponse getPondFeedAnalytics(
@@ -72,7 +69,7 @@ public class AnalyticsServiceImpl
                                 new ResourceNotFoundException(
                                         "No active pond cycle found."));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = DateTimeUtil.today();
 
         LocalDate weekStart =
                 today.with(
@@ -139,8 +136,7 @@ public class AnalyticsServiceImpl
         Site site =
                 siteRepository.findById(siteId)
                         .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Site not found."));
+                                new ResourceNotFoundException(SITE_NOT_FOUND));
 
         SiteFeedAnalyticsResponse feed =
                 getSiteFeedAnalytics(siteId);
@@ -239,16 +235,14 @@ public class AnalyticsServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SiteHarvestAnalyticsResponse getSiteHarvestAnalytics(
             UUID siteId) {
 
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Site not found."));
+                        new ResourceNotFoundException(SITE_NOT_FOUND));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = DateTimeUtil.today();
 
         LocalDate weekStart =
                 today.with(
@@ -318,14 +312,12 @@ public class AnalyticsServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public InventoryAnalyticsResponse getInventoryAnalytics(
             UUID siteId) {
 
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Site not found."));
+                        new ResourceNotFoundException(SITE_NOT_FOUND));
 
         FeedInventory inventory =
                 feedInventoryRepository.findBySiteId(siteId)
@@ -333,7 +325,7 @@ public class AnalyticsServiceImpl
                                 new ResourceNotFoundException(
                                         "Inventory not found."));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = DateTimeUtil.today();
 
         LocalDate weekStart =
                 today.with(
@@ -413,16 +405,14 @@ public class AnalyticsServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SiteFeedAnalyticsResponse getSiteFeedAnalytics(
             UUID siteId) {
 
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Site not found."));
+                        new ResourceNotFoundException(SITE_NOT_FOUND));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = DateTimeUtil.today();
 
         LocalDate weekStart =
                 today.with(

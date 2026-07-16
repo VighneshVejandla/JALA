@@ -1,4 +1,5 @@
 spring:
+
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
@@ -25,6 +26,10 @@ spring:
 logging:
   level:
     org.hibernate.SQL: DEBUG
+    root: INFO
+
+  test:
+    jwt: ${JWT_EXPIRATION:NOT_FOUND}
 
 jwt:
   secret: ${JWT_SECRET}

@@ -2,6 +2,7 @@ package com.jala.backend.feedinventory.service;
 
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
+import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feedinventory.dto.response.FeedInventoryResponse;
 import com.jala.backend.feedinventory.entity.FeedInventory;
 import com.jala.backend.feedinventory.mapper.FeedInventoryMapper;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,14 +35,15 @@ public class FeedInventoryServiceImpl
     private static final BigDecimal LOW_STOCK_THRESHOLD =
             BigDecimal.valueOf(150);
 
+    private static final String EXC = "Feed inventory not found.";
+
     @Override
     @Transactional(readOnly = true)
     public FeedInventoryResponse getInventoryBySite(UUID siteId) {
 
         FeedInventory inventory = repository.findBySiteId(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Feed inventory not found."));
+                        new ResourceNotFoundException(EXC));
 
         return mapper.toResponse(inventory);
     }
@@ -66,8 +67,7 @@ public class FeedInventoryServiceImpl
         FeedInventory inventory = repository
                 .findBySiteId(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Feed inventory not found."));
+                        new ResourceNotFoundException(EXC));
 
         inventory.setTotalReceivedKg(
                 inventory.getTotalReceivedKg()
@@ -77,7 +77,7 @@ public class FeedInventoryServiceImpl
                 inventory.getAvailableKg()
                         .add(quantityKg));
 
-        inventory.setUpdatedAt(LocalDateTime.now());
+        inventory.setUpdatedAt(DateTimeUtil.now());
 
 
 
@@ -93,8 +93,7 @@ public class FeedInventoryServiceImpl
         FeedInventory inventory = repository
                 .findBySiteId(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Feed inventory not found."));
+                        new ResourceNotFoundException(EXC));
 
         if (inventory.getAvailableKg()
                 .compareTo(quantityKg) < 0) {
@@ -111,7 +110,7 @@ public class FeedInventoryServiceImpl
                 inventory.getAvailableKg()
                         .subtract(quantityKg));
 
-        inventory.setUpdatedAt(LocalDateTime.now());
+        inventory.setUpdatedAt(DateTimeUtil.now());
 
         repository.save(inventory);
 
