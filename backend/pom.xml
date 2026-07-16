@@ -27,9 +27,9 @@
 
 		<sonar.organization>vighneshvejandla</sonar.organization>
 
-		<sonar.projectKey>jala-backend</sonar.projectKey>
-		<sonar.projectName>JALA Backend</sonar.projectName>
-		<sonar.host.url>http://localhost:9000</sonar.host.url>
+<!--		<sonar.projectKey>jala-backend</sonar.projectKey>-->
+<!--		<sonar.projectName>JALA Backend</sonar.projectName>-->
+<!--		<sonar.host.url>http://localhost:9000</sonar.host.url>-->
 	</properties>
 
 	<dependencies>
