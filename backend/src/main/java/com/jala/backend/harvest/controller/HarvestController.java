@@ -9,6 +9,7 @@ import com.jala.backend.harvest.service.HarvestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class HarvestController {
         HarvestResponse response =
                 service.createHarvest(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<HarvestResponse>builder()
                         .success(true)
                         .message("Harvest created successfully")
@@ -43,10 +44,12 @@ public class HarvestController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<HarvestResponse>>> getHarvests(
-            @RequestParam UUID pondCycleId) {
+            @RequestParam UUID pondCycleId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<HarvestResponse> response =
-                service.getHarvests(pondCycleId);
+                service.getHarvests(pondCycleId, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<HarvestResponse>>builder()

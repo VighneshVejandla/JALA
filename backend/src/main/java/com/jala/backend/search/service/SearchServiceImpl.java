@@ -8,17 +8,28 @@ import com.jala.backend.pond.repository.PondRepository;
 import com.jala.backend.search.dto.response.GlobalSearchResponse;
 import com.jala.backend.search.dto.response.SearchResultResponse;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SearchServiceImpl
         implements SearchService {
+
+    /** Caps each category so global search never scans unbounded rows. */
+    private static final int MAX_RESULTS_PER_TYPE = 50;
+
+    private static final Pageable RESULT_CAP =
+            PageRequest.of(0, MAX_RESULTS_PER_TYPE);
 
     private final SiteRepository siteRepository;
 
@@ -32,32 +43,49 @@ public class SearchServiceImpl
 
     private final NotificationRepository notificationRepository;
 
+    private final SiteAccessService siteAccessService;
+
     @Override
     public GlobalSearchResponse search(
             String keyword) {
 
+        // null = unrestricted; otherwise results are limited to these sites.
+        List<UUID> accessible = siteAccessService.accessibleSiteIds();
+
+        Set<UUID> allowedSites =
+                accessible == null ? null : Set.copyOf(accessible);
+
         return GlobalSearchResponse.builder()
 
-                .sites(searchSites(keyword))
+                .sites(searchSites(keyword, allowedSites))
 
-                .ponds(searchPonds(keyword))
+                .ponds(searchPonds(keyword, allowedSites))
 
-                .feedEntries(searchFeed(keyword))
+                .feedEntries(searchFeed(keyword, allowedSites))
 
-                .medicineEntries(searchMedicine(keyword))
+                .medicineEntries(searchMedicine(keyword, allowedSites))
 
-                .harvests(searchHarvest(keyword))
+                .harvests(searchHarvest(keyword, allowedSites))
 
-                .notifications(searchNotifications(keyword))
+                .notifications(searchNotifications(keyword, allowedSites))
 
                 .build();
     }
 
-    private List<SearchResultResponse> searchSites(
-            String keyword) {
+    private static boolean allowed(
+            Set<UUID> allowedSites,
+            UUID siteId) {
 
-        return siteRepository.search(keyword)
+        return allowedSites == null || allowedSites.contains(siteId);
+    }
+
+    private List<SearchResultResponse> searchSites(
+            String keyword,
+            Set<UUID> allowedSites) {
+
+        return siteRepository.search(keyword, RESULT_CAP)
                 .stream()
+                .filter(site -> allowed(allowedSites, site.getId()))
                 .map(site ->
                         SearchResultResponse.builder()
                                 .id(site.getId())
@@ -69,10 +97,13 @@ public class SearchServiceImpl
     }
 
     private List<SearchResultResponse> searchPonds(
-            String keyword) {
+            String keyword,
+            Set<UUID> allowedSites) {
 
-        return pondRepository.search(keyword)
+        return pondRepository.search(keyword, RESULT_CAP)
                 .stream()
+                .filter(pond ->
+                        allowed(allowedSites, pond.getSite().getId()))
                 .map(pond ->
                         SearchResultResponse.builder()
                                 .id(pond.getId())
@@ -87,10 +118,14 @@ public class SearchServiceImpl
     }
 
     private List<SearchResultResponse> searchFeed(
-            String keyword) {
+            String keyword,
+            Set<UUID> allowedSites) {
 
-        return feedEntryRepository.search(keyword)
+        return feedEntryRepository.search(keyword, RESULT_CAP)
                 .stream()
+                .filter(feed -> allowed(
+                        allowedSites,
+                        feed.getPondCycle().getPond().getSite().getId()))
                 .map(feed ->
                         SearchResultResponse.builder()
                                 .id(feed.getId())
@@ -104,10 +139,14 @@ public class SearchServiceImpl
     }
 
     private List<SearchResultResponse> searchMedicine(
-            String keyword) {
+            String keyword,
+            Set<UUID> allowedSites) {
 
-        return medicineRepository.search(keyword)
+        return medicineRepository.search(keyword, RESULT_CAP)
                 .stream()
+                .filter(medicine -> allowed(
+                        allowedSites,
+                        medicine.getPondCycle().getPond().getSite().getId()))
                 .map(medicine ->
                         SearchResultResponse.builder()
                                 .id(medicine.getId())
@@ -122,10 +161,14 @@ public class SearchServiceImpl
     }
 
     private List<SearchResultResponse> searchHarvest(
-            String keyword) {
+            String keyword,
+            Set<UUID> allowedSites) {
 
-        return harvestRepository.search(keyword)
+        return harvestRepository.search(keyword, RESULT_CAP)
                 .stream()
+                .filter(harvest -> allowed(
+                        allowedSites,
+                        harvest.getPondCycle().getPond().getSite().getId()))
                 .map(harvest ->
                         SearchResultResponse.builder()
                                 .id(harvest.getId())
@@ -140,10 +183,13 @@ public class SearchServiceImpl
     }
 
     private List<SearchResultResponse> searchNotifications(
-            String keyword) {
+            String keyword,
+            Set<UUID> allowedSites) {
 
-        return notificationRepository.search(keyword)
+        return notificationRepository.search(keyword, RESULT_CAP)
                 .stream()
+                .filter(notification ->
+                        allowed(allowedSites, notification.getSiteId()))
                 .map(notification ->
                         SearchResultResponse.builder()
                                 .id(notification.getId())

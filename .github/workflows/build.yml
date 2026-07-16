@@ -1,5 +1,4 @@
-#D:\JALA\.github\workflows\build.yml
-name: Build & SonarCloud
+name: CI
 
 on:
   push:
@@ -8,13 +7,15 @@ on:
       - develop
 
   pull_request:
-    branches:
-      - main
-      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     defaults:
       run:
@@ -24,6 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # Full history: Sonar needs blame information.
           fetch-depth: 0
 
       - name: Setup Java 21
@@ -33,48 +35,44 @@ jobs:
           java-version: 21
           cache: maven
 
+      # Unit tests + web slices (Surefire), then integration tests on
+      # Testcontainers Postgres (Failsafe), then the JaCoCo >=90% line
+      # coverage gate. No external DB or secrets required.
+      - name: Test & Verify
+        run: ./mvnw -B verify
+
+      - name: Upload build reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            backend/target/*.jar
+            backend/target/site/jacoco/
+            backend/target/site/jacoco-it/
+            backend/target/surefire-reports/
+            backend/target/failsafe-reports/
+          retention-days: 14
+
       - name: Cache SonarCloud
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Verify that GitHub Secrets are available
-      - name: Verify Environment Variables
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
-        run: |
-          echo "DB_HOST=${DB_HOST:+SET}"
-          echo "DB_PORT=${DB_PORT:+SET}"
-          echo "JWT_EXPIRATION=${JWT_EXPIRATION:+SET}"
-
-      - name: Build & Analyze
+      # Quality gate blocks the build: analysis waits for the server
+      # verdict and fails the job when the gate fails. Skipped on fork
+      # PRs (no access to SONAR_TOKEN).
+      - name: SonarCloud Analysis
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
-
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
-
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
-
         run: |
-          mvn -B verify \
-            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-            -Dsonar.organization=$SONAR_ORGANIZATION \
-            -Dsonar.host.url=https://sonarcloud.io
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.qualitygate.wait=true

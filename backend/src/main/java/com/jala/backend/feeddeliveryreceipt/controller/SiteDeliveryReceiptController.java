@@ -9,6 +9,7 @@ import com.jala.backend.feeddeliveryreceipt.service.SiteDeliveryReceiptService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class SiteDeliveryReceiptController {
         SiteDeliveryReceiptResponse response =
                 service.uploadReceipt(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<SiteDeliveryReceiptResponse>builder()
                         .success(true)
                         .message("Receipt uploaded successfully")

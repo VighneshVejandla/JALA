@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -44,5 +45,38 @@ public abstract class BaseEntity implements Serializable {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = DateTimeUtil.now();
+    }
+
+    /**
+     * Identifier-based equality that is safe for Hibernate proxies:
+     * two entities are equal only when they share the same persistent
+     * class and a non-null database identifier.
+     */
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        Class<?> thisClass = this instanceof HibernateProxy proxy
+                ? proxy.getHibernateLazyInitializer().getPersistentClass()
+                : getClass();
+        Class<?> otherClass = o instanceof HibernateProxy proxy
+                ? proxy.getHibernateLazyInitializer().getPersistentClass()
+                : o.getClass();
+        if (!thisClass.equals(otherClass)) {
+            return false;
+        }
+        BaseEntity that = (BaseEntity) o;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy proxy
+                ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+                : getClass().hashCode();
     }
 }

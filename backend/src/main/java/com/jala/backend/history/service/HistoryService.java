@@ -11,13 +11,19 @@ public interface HistoryService {
             UUID pondId);
 
     List<HarvestHistoryResponse> getHarvestHistory(
-            UUID pondId);
+            UUID pondId,
+            Integer page,
+            Integer size);
 
     List<FeedHistoryResponse> getFeedHistory(
-            UUID pondId);
+            UUID pondId,
+            Integer page,
+            Integer size);
 
     List<MedicineHistoryResponse> getMedicineHistory(
-            UUID pondId);
+            UUID pondId,
+            Integer page,
+            Integer size);
 
     PondTimelineResponse getTimeline(
             UUID pondId);

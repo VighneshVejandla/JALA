@@ -16,7 +16,9 @@ public interface FeedDeliveryService {
     FeedDeliveryResponse getDelivery(
             UUID id);
 
-    List<FeedDeliveryResponse> getAllDeliveries();
+    List<FeedDeliveryResponse> getAllDeliveries(
+            Integer page,
+            Integer size);
 
     SiteDeliveryResponse addSiteDelivery(
             UUID feedDeliveryId,

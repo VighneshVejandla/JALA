@@ -12,5 +12,7 @@ public interface MedicinePhotoService {
             CreateMedicinePhotoRequest request);
 
     List<MedicinePhotoResponse> getPhotos(
-            UUID medicineEntryId);
+            UUID medicineEntryId,
+            Integer page,
+            Integer size);
 }

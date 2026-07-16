@@ -8,6 +8,7 @@ import com.jala.backend.site.dto.response.SiteResponse;
 import com.jala.backend.site.service.SiteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class SiteController {
 
         SiteResponse response = siteService.createSite(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<SiteResponse>builder()
                         .success(true)
                         .message("Site created successfully")
@@ -73,7 +74,7 @@ public class SiteController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<SiteResponse>> patchSite(
             @PathVariable UUID id,
-            @RequestBody UpdateSiteRequest request) {
+            @Valid @RequestBody UpdateSiteRequest request) {
 
         SiteResponse response = siteService.patchSite(id, request);
 

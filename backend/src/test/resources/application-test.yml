@@ -1,0 +1,29 @@
+# Test profile: the datasource comes from Testcontainers via
+# @ServiceConnection; everything else is fixed, no env vars needed.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+jwt:
+  secret: test-secret-key-that-is-at-least-32-bytes-long!!
+  expiration: 3600000
+
+supabase:
+  url: http://localhost:54321
+  service-role-key: test-service-role-key
+  storage-bucket: test-bucket
+
+app:
+  cors:
+    allowed-origins: ""
+
+logging:
+  level:
+    root: WARN
+    com.jala.backend: INFO

@@ -3,6 +3,7 @@ package com.jala.backend.medicine.service;
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
+import com.jala.backend.common.util.PageRequestUtil;
 import com.jala.backend.medicine.dto.request.CreateMedicineRequest;
 import com.jala.backend.medicine.dto.request.UpdateMedicineRequest;
 import com.jala.backend.medicine.dto.response.MedicineResponse;
@@ -13,12 +14,11 @@ import com.jala.backend.medicine.repository.MedicineRepository;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.security.service.CurrentUserService;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import com.jala.backend.user.entity.User;
-import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,16 +35,19 @@ public class MedicineServiceImpl
 
     private final PondCycleRepository pondCycleRepository;
 
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+
+    private final SiteAccessService siteAccessService;
 
     private final MedicineMapper mapper;
-
-    private static final String USER_NOT_FOUND = "User not found.";
 
     @Override
     @Transactional
     public MedicineResponse createMedicine(
             CreateMedicineRequest request) {
+
+        siteAccessService.checkPondCycleAccess(
+                request.getPondCycleId());
 
         PondCycle pondCycle = pondCycleRepository
                 .findById(request.getPondCycleId())
@@ -58,13 +61,7 @@ public class MedicineServiceImpl
                     "Medicine can only be added to an active pond cycle.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+        User user = currentUserService.getCurrentUser();
 
         MedicineEntry entry = mapper.toEntity(request);
 
@@ -86,12 +83,17 @@ public class MedicineServiceImpl
     @Override
     @Transactional(readOnly = true)
     public List<MedicineResponse> getMedicines(
-            UUID pondCycleId) {
+            UUID pondCycleId,
+            Integer page,
+            Integer size) {
+
+        siteAccessService.checkPondCycleAccess(pondCycleId);
 
         return repository
                 .findByPondCycleIdAndStatusOrderByCreatedAtDesc(
                         pondCycleId,
-                        MedicineStatus.ACTIVE)
+                        MedicineStatus.ACTIVE,
+                        PageRequestUtil.of(page, size))
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -104,6 +106,9 @@ public class MedicineServiceImpl
             UpdateMedicineRequest request) {
 
         MedicineEntry entry = getMedicineOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(
+                entry.getPondCycle().getId());
 
         if (entry.getStatus() == MedicineStatus.CANCELLED) {
 
@@ -141,19 +146,16 @@ public class MedicineServiceImpl
 
         MedicineEntry entry = getMedicineOrThrow(id);
 
+        siteAccessService.checkPondCycleAccess(
+                entry.getPondCycle().getId());
+
         if (entry.getStatus() == MedicineStatus.CANCELLED) {
 
             throw new BadRequestException(
                     "Medicine entry is already cancelled.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+        User user = currentUserService.getCurrentUser();
 
         entry.setStatus(MedicineStatus.CANCELLED);
 
@@ -174,19 +176,16 @@ public class MedicineServiceImpl
 
         MedicineEntry entry = getMedicineOrThrow(id);
 
+        siteAccessService.checkPondCycleAccess(
+                entry.getPondCycle().getId());
+
         if (entry.getStatus() == MedicineStatus.ACTIVE) {
 
             throw new BadRequestException(
                     "Medicine entry is already active.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+        User user = currentUserService.getCurrentUser();
 
         entry.setStatus(MedicineStatus.ACTIVE);
 

@@ -21,10 +21,12 @@ public class NotificationController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<NotificationSummaryResponse>>
-    getNotifications() {
+    getNotifications(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         NotificationSummaryResponse response =
-                notificationService.getNotifications();
+                notificationService.getNotifications(page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<NotificationSummaryResponse>builder()

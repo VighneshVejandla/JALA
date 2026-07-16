@@ -1,9 +1,11 @@
 package com.jala.backend.site.repository;
 
 import com.jala.backend.site.entity.Site;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +18,8 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
 
     Optional<Site> findById(UUID id);
 
+    List<Site> findByIdIn(Collection<UUID> ids);
+
     @Query("""
         SELECT s
         FROM Site s
@@ -24,5 +28,6 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
         ORDER BY s.siteCode
         """)
     List<Site> search(
-            String keyword);
+            String keyword,
+            Pageable pageable);
 }

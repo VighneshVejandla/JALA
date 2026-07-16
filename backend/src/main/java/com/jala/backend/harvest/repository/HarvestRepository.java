@@ -2,6 +2,8 @@ package com.jala.backend.harvest.repository;
 
 import com.jala.backend.harvest.entity.Harvest;
 import com.jala.backend.harvest.enums.HarvestStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -14,8 +16,10 @@ import java.util.UUID;
 public interface HarvestRepository
         extends JpaRepository<Harvest, UUID> {
 
+    @EntityGraph(attributePaths = {"pondCycle", "uploadedBy"})
     List<Harvest> findByPondCycleIdOrderByHarvestDateDesc(
-            UUID pondCycleId);
+            UUID pondCycleId,
+            Pageable pageable);
 
     List<Harvest> findByPondCycleIdAndStatusOrderByHarvestDateDesc(
             UUID pondCycleId,
@@ -50,10 +54,24 @@ public interface HarvestRepository
             UUID pondId,
             HarvestStatus status);
 
+    @EntityGraph(attributePaths = {"pondCycle", "uploadedBy", "cancelledBy"})
     List<Harvest> findByPondCyclePondIdOrderByHarvestDateDescUploadedAtDesc(
+            UUID pondId,
+            Pageable pageable);
+
+    @EntityGraph(attributePaths = {"pondCycle"})
+    List<Harvest> findByPondCyclePondId(
             UUID pondId);
 
-    List<Harvest> findByPondCyclePondId(
+    /** (cycleId, active harvest count) per cycle of the pond in one query. */
+    @Query("""
+            SELECT h.pondCycle.id, COUNT(h)
+            FROM Harvest h
+            WHERE h.pondCycle.pond.id = :pondId
+            AND h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+            GROUP BY h.pondCycle.id
+            """)
+    List<Object[]> countActiveByCycleForPond(
             UUID pondId);
 
     @Query("""
@@ -81,6 +99,9 @@ public interface HarvestRepository
     @Query("""
         SELECT h
         FROM Harvest h
+        JOIN FETCH h.pondCycle pc
+        JOIN FETCH pc.pond p
+        JOIN FETCH p.site
         WHERE h.status =
               com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
         AND (
@@ -90,15 +111,29 @@ public interface HarvestRepository
         ORDER BY h.harvestDate DESC
         """)
     List<Harvest> search(
-            String keyword);
+            String keyword,
+            Pageable pageable);
 
+    /** (month, revenue total) rows — aggregation happens in SQL. */
     @Query("""
-            SELECT h
+            SELECT MONTH(h.harvestDate), COALESCE(SUM(h.totalAmount), 0)
             FROM Harvest h
             WHERE h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
             AND h.pondCycle.pond.site.id = :siteId
+            GROUP BY MONTH(h.harvestDate)
             """)
-    List<Harvest> findAllBySiteForChart(
+    List<Object[]> sumRevenueByMonth(
+            UUID siteId);
+
+    /** (month, harvested kg total) rows — aggregation happens in SQL. */
+    @Query("""
+            SELECT MONTH(h.harvestDate), COALESCE(SUM(h.harvestQuantityKg), 0)
+            FROM Harvest h
+            WHERE h.status = com.jala.backend.harvest.enums.HarvestStatus.ACTIVE
+            AND h.pondCycle.pond.site.id = :siteId
+            GROUP BY MONTH(h.harvestDate)
+            """)
+    List<Object[]> sumHarvestKgByMonth(
             UUID siteId);
 
     @Query("""

@@ -7,6 +7,7 @@ import com.jala.backend.medicinephoto.dto.response.MedicinePhotoResponse;
 import com.jala.backend.medicinephoto.service.MedicinePhotoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class MedicinePhotoController {
         MedicinePhotoResponse response =
                 service.uploadPhoto(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<MedicinePhotoResponse>builder()
                         .success(true)
                         .message("Medicine photo uploaded successfully")
@@ -42,10 +43,12 @@ public class MedicinePhotoController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<MedicinePhotoResponse>>> getPhotos(
-            @RequestParam UUID medicineEntryId) {
+            @RequestParam UUID medicineEntryId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<MedicinePhotoResponse> response =
-                service.getPhotos(medicineEntryId);
+                service.getPhotos(medicineEntryId, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<MedicinePhotoResponse>>builder()

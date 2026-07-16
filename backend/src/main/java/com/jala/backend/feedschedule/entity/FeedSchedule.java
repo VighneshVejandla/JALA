@@ -4,9 +4,9 @@ import com.jala.backend.common.entity.BaseEntity;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "feed_schedules")
@@ -14,12 +14,8 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class FeedSchedule extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pond_cycle_id", nullable = false)

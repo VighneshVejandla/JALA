@@ -13,7 +13,9 @@ public interface MedicineService {
             CreateMedicineRequest request);
 
     List<MedicineResponse> getMedicines(
-            UUID pondCycleId);
+            UUID pondCycleId,
+            Integer page,
+            Integer size);
 
     MedicineResponse updateMedicine(
             UUID id,

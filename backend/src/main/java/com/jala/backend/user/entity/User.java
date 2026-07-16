@@ -16,7 +16,6 @@ import java.io.Serializable;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 public class User extends BaseEntity implements Serializable {
 
     @Serial
@@ -44,4 +43,12 @@ public class User extends BaseEntity implements Serializable {
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;
+
+    /**
+     * Incremented on deactivation, password or role change. Tokens carry the
+     * version they were issued with; a mismatch invalidates them immediately.
+     */
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private Integer tokenVersion = 0;
 }

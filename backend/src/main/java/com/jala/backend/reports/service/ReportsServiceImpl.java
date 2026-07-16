@@ -1,5 +1,6 @@
 package com.jala.backend.reports.service;
 
+import com.jala.backend.common.constants.MessageConstants;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.feedentry.entity.FeedEntry;
@@ -8,6 +9,7 @@ import com.jala.backend.harvest.entity.Harvest;
 import com.jala.backend.harvest.repository.HarvestRepository;
 import com.jala.backend.medicine.entity.MedicineEntry;
 import com.jala.backend.medicine.repository.MedicineRepository;
+import com.jala.backend.medicinephoto.entity.MedicinePhoto;
 import com.jala.backend.medicinephoto.repository.MedicinePhotoRepository;
 import com.jala.backend.pond.entity.Pond;
 import com.jala.backend.pond.repository.PondRepository;
@@ -15,6 +17,7 @@ import com.jala.backend.reports.dto.request.ReportFilterRequest;
 import com.jala.backend.reports.dto.response.*;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,9 +29,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,11 +54,11 @@ public class ReportsServiceImpl
 
     private final MedicinePhotoRepository medicinePhotoRepository;
 
-    private static final String SITE_NOT_FOUND = "Site not found.";
+    private final SiteAccessService siteAccessService;
 
-    private static final String POND_NOT_FOUND = "Pond not found.";
 
     @Override
+    @Transactional(readOnly = true)
     public RevenueReportResponse getRevenueReport(
             ReportFilterRequest request) {
 
@@ -60,20 +66,11 @@ public class ReportsServiceImpl
                 "Generating revenue report for site {}",
                 request.getSiteId());
 
-        Site site = siteRepository.findById(
-                        request.getSiteId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(SITE_NOT_FOUND));
+        siteAccessService.checkSiteAccess(request.getSiteId());
 
-        Pond pond = null;
+        Site site = getSiteOrThrow(request.getSiteId());
 
-        if (request.getPondId() != null) {
-
-            pond = pondRepository.findById(
-                            request.getPondId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(POND_NOT_FOUND));
-        }
+        Pond pond = resolvePond(request.getPondId());
 
         List<Harvest> harvests =
                 harvestRepository.findRevenueReport(
@@ -85,49 +82,19 @@ public class ReportsServiceImpl
         int harvestCount = harvests.size();
 
         BigDecimal totalHarvestKg =
-                harvests.stream()
-                        .map(Harvest::getHarvestQuantityKg)
-                        .filter(java.util.Objects::nonNull)
-                        .reduce(
-                                BigDecimal.ZERO,
-                                BigDecimal::add);
+                sum(harvests, Harvest::getHarvestQuantityKg);
 
         BigDecimal totalRevenue =
-                harvests.stream()
-                        .map(Harvest::getTotalAmount)
-                        .filter(java.util.Objects::nonNull)
-                        .reduce(
-                                BigDecimal.ZERO,
-                                BigDecimal::add);
+                sum(harvests, Harvest::getTotalAmount);
 
         BigDecimal totalSellingPrice =
-                harvests.stream()
-                        .map(Harvest::getSellingPricePerKg)
-                        .filter(java.util.Objects::nonNull)
-                        .reduce(
-                                BigDecimal.ZERO,
-                                BigDecimal::add);
+                sum(harvests, Harvest::getSellingPricePerKg);
 
         BigDecimal averageHarvestKg =
-                BigDecimal.ZERO;
+                average(totalHarvestKg, harvestCount);
 
         BigDecimal averageSellingPrice =
-                BigDecimal.ZERO;
-
-        if (harvestCount > 0) {
-
-            averageHarvestKg =
-                    totalHarvestKg.divide(
-                            BigDecimal.valueOf(harvestCount),
-                            2,
-                            RoundingMode.HALF_UP);
-
-            averageSellingPrice =
-                    totalSellingPrice.divide(
-                            BigDecimal.valueOf(harvestCount),
-                            2,
-                            RoundingMode.HALF_UP);
-        }
+                average(totalSellingPrice, harvestCount);
 
         return RevenueReportResponse.builder()
 
@@ -135,20 +102,9 @@ public class ReportsServiceImpl
                 .siteCode(site.getSiteCode())
                 .siteName(site.getSiteName())
 
-                .pondId(
-                        pond != null
-                                ? pond.getId()
-                                : null)
-
-                .pondCode(
-                        pond != null
-                                ? pond.getPondCode()
-                                : null)
-
-                .pondName(
-                        pond != null
-                                ? pond.getPondName()
-                                : null)
+                .pondId(pond != null ? pond.getId() : null)
+                .pondCode(pond != null ? pond.getPondCode() : null)
+                .pondName(pond != null ? pond.getPondName() : null)
 
                 .fromDate(request.getFromDate())
                 .toDate(request.getToDate())
@@ -167,6 +123,7 @@ public class ReportsServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FeedReportResponse getFeedReport(
             ReportFilterRequest request) {
 
@@ -174,20 +131,11 @@ public class ReportsServiceImpl
                 "Generating feed report for site {}",
                 request.getSiteId());
 
-        Site site = siteRepository.findById(
-                        request.getSiteId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(SITE_NOT_FOUND));
+        siteAccessService.checkSiteAccess(request.getSiteId());
 
-        Pond pond = null;
+        Site site = getSiteOrThrow(request.getSiteId());
 
-        if (request.getPondId() != null) {
-
-            pond = pondRepository.findById(
-                            request.getPondId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(POND_NOT_FOUND));
-        }
+        Pond pond = resolvePond(request.getPondId());
 
         List<FeedEntry> entries =
                 feedEntryRepository.findFeedReport(
@@ -199,20 +147,9 @@ public class ReportsServiceImpl
         int count = entries.size();
 
         BigDecimal totalFeedKg =
-                entries.stream()
-                        .map(FeedEntry::getFeedQuantityKg)
-                        .filter(java.util.Objects::nonNull)
-                        .reduce(
-                                BigDecimal.ZERO,
-                                BigDecimal::add);
+                sum(entries, FeedEntry::getFeedQuantityKg);
 
-        BigDecimal averageFeed =
-                count == 0
-                        ? BigDecimal.ZERO
-                        : totalFeedKg.divide(
-                        BigDecimal.valueOf(count),
-                        2,
-                        RoundingMode.HALF_UP);
+        BigDecimal averageFeed = average(totalFeedKg, count);
 
         List<FeedReportItemResponse> details =
                 entries.stream()
@@ -234,20 +171,9 @@ public class ReportsServiceImpl
                 .siteCode(site.getSiteCode())
                 .siteName(site.getSiteName())
 
-                .pondId(
-                        pond != null
-                                ? pond.getId()
-                                : null)
-
-                .pondCode(
-                        pond != null
-                                ? pond.getPondCode()
-                                : null)
-
-                .pondName(
-                        pond != null
-                                ? pond.getPondName()
-                                : null)
+                .pondId(pond != null ? pond.getId() : null)
+                .pondCode(pond != null ? pond.getPondCode() : null)
+                .pondName(pond != null ? pond.getPondName() : null)
 
                 .fromDate(request.getFromDate())
                 .toDate(request.getToDate())
@@ -264,87 +190,47 @@ public class ReportsServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MonthlyChartResponse> getRevenueChart(UUID siteId) {
-        Map<Integer, BigDecimal> values =
-                new java.util.HashMap<>();
 
-        List<Harvest> harvests =
-                harvestRepository.findAllBySiteForChart(siteId);
+        siteAccessService.checkSiteAccess(siteId);
 
-        for (Harvest harvest : harvests) {
-
-            if (harvest.getHarvestDate() == null
-                    || harvest.getTotalAmount() == null) {
-                continue;
-            }
-
-            int month =
-                    harvest.getHarvestDate()
-                            .getMonthValue();
-
-            values.merge(
-                    month,
-                    harvest.getTotalAmount(),
-                    BigDecimal::add);
-        }
-
-        return buildMonthlyChart(values);
+        return buildMonthlyChart(
+                toMonthTotals(harvestRepository.sumRevenueByMonth(siteId)));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MonthlyChartResponse> getFeedChart(UUID siteId) {
-        Map<Integer, BigDecimal> values =
-                new java.util.HashMap<>();
 
-        List<FeedEntry> entries =
-                feedEntryRepository.findAllBySiteForChart(siteId);
+        siteAccessService.checkSiteAccess(siteId);
 
-        for (FeedEntry entry : entries) {
-
-            if (entry.getFeedDate() == null
-                    || entry.getFeedQuantityKg() == null) {
-                continue;
-            }
-
-            int month =
-                    entry.getFeedDate()
-                            .getMonthValue();
-
-            values.merge(
-                    month,
-                    entry.getFeedQuantityKg(),
-                    BigDecimal::add);
-        }
-
-        return buildMonthlyChart(values);
+        return buildMonthlyChart(
+                toMonthTotals(feedEntryRepository.sumFeedKgByMonth(siteId)));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MonthlyChartResponse> getHarvestChart(UUID siteId) {
-        Map<Integer, BigDecimal> values =
-                new java.util.HashMap<>();
 
-        List<Harvest> harvests =
-                harvestRepository.findAllBySiteForChart(siteId);
+        siteAccessService.checkSiteAccess(siteId);
 
-        for (Harvest harvest : harvests) {
+        return buildMonthlyChart(
+                toMonthTotals(harvestRepository.sumHarvestKgByMonth(siteId)));
+    }
 
-            if (harvest.getHarvestDate() == null
-                    || harvest.getHarvestQuantityKg() == null) {
-                continue;
-            }
+    /** Maps (month, total) aggregate rows to a month-indexed lookup. */
+    private Map<Integer, BigDecimal> toMonthTotals(List<Object[]> rows) {
 
-            int month =
-                    harvest.getHarvestDate()
-                            .getMonthValue();
+        Map<Integer, BigDecimal> totals = new HashMap<>();
 
-            values.merge(
-                    month,
-                    harvest.getHarvestQuantityKg(),
-                    BigDecimal::add);
+        for (Object[] row : rows) {
+            totals.put(
+                    ((Number) row[0]).intValue(),
+                    (BigDecimal) row[1]);
         }
 
-        return buildMonthlyChart(values);
+        return totals;
     }
 
     private List<MonthlyChartResponse> buildMonthlyChart(
@@ -381,10 +267,9 @@ public class ReportsServiceImpl
                 "Fetching reports dashboard for site {}",
                 siteId);
 
-        Site site =
-                siteRepository.findById(siteId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(SITE_NOT_FOUND));
+        siteAccessService.checkSiteAccess(siteId);
+
+        Site site = getSiteOrThrow(siteId);
 
         ReportFilterRequest filter =
                 new ReportFilterRequest();
@@ -441,6 +326,7 @@ public class ReportsServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MedicineReportResponse getMedicineReport(
             ReportFilterRequest request) {
 
@@ -448,72 +334,47 @@ public class ReportsServiceImpl
                 "Generating medicine report for site {}",
                 request.getSiteId());
 
-        Site site = siteRepository.findById(
-                        request.getSiteId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(SITE_NOT_FOUND));
+        siteAccessService.checkSiteAccess(request.getSiteId());
 
-        Pond pond = null;
+        Site site = getSiteOrThrow(request.getSiteId());
 
-        if (request.getPondId() != null) {
-
-            pond = pondRepository.findById(
-                            request.getPondId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(POND_NOT_FOUND));
-        }
+        Pond pond = resolvePond(request.getPondId());
 
         LocalDateTime fromDateTime =
                 request.getFromDate().atStartOfDay();
 
-        LocalDateTime toDateTime =
-                request.getToDate().atTime(23, 59, 59);
+        // Half-open upper bound: includes every instant of toDate.
+        LocalDateTime toDateTimeExclusive =
+                request.getToDate().plusDays(1).atStartOfDay();
 
         List<MedicineEntry> entries =
                 medicineRepository.findMedicineReport(
                         request.getSiteId(),
                         request.getPondId(),
                         fromDateTime,
-                        toDateTime);
+                        toDateTimeExclusive);
 
         int count = entries.size();
 
         BigDecimal totalQuantity =
-                entries.stream()
-                        .map(MedicineEntry::getQuantity)
-                        .filter(java.util.Objects::nonNull)
-                        .reduce(
-                                BigDecimal.ZERO,
-                                BigDecimal::add);
+                sum(entries, MedicineEntry::getQuantity);
+
+        Map<UUID, List<MedicinePhoto>> photosByEntry =
+                loadPhotosByEntry(entries);
 
         List<MedicineReportItemResponse> details =
                 entries.stream()
-                        .map(entry -> {
-
-                            List<MedicinePhotoReportResponse> photos =
-                                    medicinePhotoRepository
-                                            .findByMedicineEntryIdOrderByUploadedAt(
-                                                    entry.getId())
-                                            .stream()
-                                            .map(photo ->
-                                                    MedicinePhotoReportResponse.builder()
-                                                            .fileName(photo.getFileName())
-                                                            .filePath(photo.getFilePath())
-                                                            .contentType(photo.getContentType())
-                                                            .fileSize(photo.getFileSize())
-                                                            .build())
-                                            .toList();
-
-                            return MedicineReportItemResponse.builder()
-                                    .createdAt(entry.getCreatedAt())
-                                    .cycleNumber(entry.getPondCycle().getCycleNumber())
-                                    .quantity(entry.getQuantity())
-                                    .unit(entry.getUnit().name())
-                                    .remarks(entry.getRemarks())
-                                    .createdBy(entry.getCreatedBy().getEmployeeCode())
-                                    .photos(photos)
-                                    .build();
-                        })
+                        .map(entry -> MedicineReportItemResponse.builder()
+                                .createdAt(entry.getCreatedAt())
+                                .cycleNumber(entry.getPondCycle().getCycleNumber())
+                                .quantity(entry.getQuantity())
+                                .unit(entry.getUnit().name())
+                                .remarks(entry.getRemarks())
+                                .createdBy(entry.getCreatedBy().getEmployeeCode())
+                                .photos(toPhotoResponses(
+                                        photosByEntry.getOrDefault(
+                                                entry.getId(), List.of())))
+                                .build())
                         .toList();
 
         return MedicineReportResponse.builder()
@@ -522,20 +383,9 @@ public class ReportsServiceImpl
                 .siteCode(site.getSiteCode())
                 .siteName(site.getSiteName())
 
-                .pondId(
-                        pond != null
-                                ? pond.getId()
-                                : null)
-
-                .pondCode(
-                        pond != null
-                                ? pond.getPondCode()
-                                : null)
-
-                .pondName(
-                        pond != null
-                                ? pond.getPondName()
-                                : null)
+                .pondId(pond != null ? pond.getId() : null)
+                .pondCode(pond != null ? pond.getPondCode() : null)
+                .pondName(pond != null ? pond.getPondName() : null)
 
                 .fromDate(request.getFromDate())
                 .toDate(request.getToDate())
@@ -547,5 +397,75 @@ public class ReportsServiceImpl
                 .details(details)
 
                 .build();
+    }
+
+    /** One query for all photos of the report instead of one per entry. */
+    private Map<UUID, List<MedicinePhoto>> loadPhotosByEntry(
+            List<MedicineEntry> entries) {
+
+        if (entries.isEmpty()) {
+            return Map.of();
+        }
+
+        List<UUID> entryIds = entries.stream()
+                .map(MedicineEntry::getId)
+                .toList();
+
+        return medicinePhotoRepository
+                .findByMedicineEntryIdInOrderByUploadedAt(entryIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        photo -> photo.getMedicineEntry().getId()));
+    }
+
+    private List<MedicinePhotoReportResponse> toPhotoResponses(
+            List<MedicinePhoto> photos) {
+
+        return photos.stream()
+                .map(photo -> MedicinePhotoReportResponse.builder()
+                        .fileName(photo.getFileName())
+                        .filePath(photo.getFilePath())
+                        .contentType(photo.getContentType())
+                        .fileSize(photo.getFileSize())
+                        .build())
+                .toList();
+    }
+
+    private Site getSiteOrThrow(UUID siteId) {
+
+        return siteRepository.findById(siteId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(MessageConstants.SITE_NOT_FOUND));
+    }
+
+    private Pond resolvePond(UUID pondId) {
+
+        if (pondId == null) {
+            return null;
+        }
+
+        return pondRepository.findById(pondId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(MessageConstants.POND_NOT_FOUND));
+    }
+
+    private static <T> BigDecimal sum(
+            List<T> items,
+            java.util.function.Function<T, BigDecimal> extractor) {
+
+        return items.stream()
+                .map(extractor)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private static BigDecimal average(BigDecimal total, int count) {
+
+        return count == 0
+                ? BigDecimal.ZERO
+                : total.divide(
+                        BigDecimal.valueOf(count),
+                        2,
+                        RoundingMode.HALF_UP);
     }
 }

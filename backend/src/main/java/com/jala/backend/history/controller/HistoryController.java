@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -44,10 +45,12 @@ public class HistoryController {
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<List<HarvestHistoryResponse>>>
     getHarvestHistory(
-            @PathVariable UUID pondId) {
+            @PathVariable UUID pondId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<HarvestHistoryResponse> response =
-                service.getHarvestHistory(pondId);
+                service.getHarvestHistory(pondId, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<HarvestHistoryResponse>>builder()
@@ -62,10 +65,12 @@ public class HistoryController {
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<List<FeedHistoryResponse>>>
     getFeedHistory(
-            @PathVariable UUID pondId) {
+            @PathVariable UUID pondId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<FeedHistoryResponse> response =
-                service.getFeedHistory(pondId);
+                service.getFeedHistory(pondId, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<FeedHistoryResponse>>builder()
@@ -80,10 +85,12 @@ public class HistoryController {
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<List<MedicineHistoryResponse>>>
     getMedicineHistory(
-            @PathVariable UUID pondId) {
+            @PathVariable UUID pondId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<MedicineHistoryResponse> response =
-                service.getMedicineHistory(pondId);
+                service.getMedicineHistory(pondId, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<MedicineHistoryResponse>>builder()

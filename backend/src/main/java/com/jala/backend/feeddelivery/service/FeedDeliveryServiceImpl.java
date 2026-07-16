@@ -3,6 +3,7 @@ package com.jala.backend.feeddelivery.service;
 import com.jala.backend.common.constants.FeedConstants;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
+import com.jala.backend.common.util.PageRequestUtil;
 import com.jala.backend.feeddelivery.dto.request.AddSiteDeliveryRequest;
 import com.jala.backend.feeddelivery.dto.request.CreateFeedDeliveryRequest;
 import com.jala.backend.feeddelivery.dto.response.FeedDeliveryResponse;
@@ -15,14 +16,13 @@ import com.jala.backend.feeddelivery.mapper.SiteDeliveryMapper;
 import com.jala.backend.feeddelivery.repository.FeedDeliveryRepository;
 import com.jala.backend.feeddelivery.repository.SiteDeliveryRepository;
 import com.jala.backend.feedinventory.service.FeedInventoryService;
+import com.jala.backend.security.service.CurrentUserService;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import com.jala.backend.user.entity.User;
-import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +39,9 @@ public class FeedDeliveryServiceImpl implements FeedDeliveryService {
 
     private final FeedDeliveryMapper mapper;
 
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+
+    private final SiteAccessService siteAccessService;
 
     private final SiteDeliveryRepository siteDeliveryRepository;
 
@@ -54,14 +56,7 @@ public class FeedDeliveryServiceImpl implements FeedDeliveryService {
     public FeedDeliveryResponse createDelivery(
             CreateFeedDeliveryRequest request) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+        User user = currentUserService.getCurrentUser();
 
         FeedDelivery delivery = mapper.toEntity(request);
 
@@ -89,11 +84,14 @@ public class FeedDeliveryServiceImpl implements FeedDeliveryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FeedDeliveryResponse> getAllDeliveries() {
+    public List<FeedDeliveryResponse> getAllDeliveries(
+            Integer page,
+            Integer size) {
 
         return repository
                 .findByStatusOrderByDeliveredAtDesc(
-                        FeedDeliveryStatus.ACTIVE)
+                        FeedDeliveryStatus.ACTIVE,
+                        PageRequestUtil.of(page, size))
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -104,6 +102,8 @@ public class FeedDeliveryServiceImpl implements FeedDeliveryService {
     public SiteDeliveryResponse addSiteDelivery(
             UUID feedDeliveryId,
             AddSiteDeliveryRequest request) {
+
+        siteAccessService.checkSiteAccess(request.getSiteId());
 
         FeedDelivery delivery =
                 getDeliveryOrThrow(feedDeliveryId);

@@ -1,5 +1,6 @@
 package com.jala.backend.analytics.service;
 
+import com.jala.backend.common.constants.MessageConstants;
 import com.jala.backend.analytics.dto.response.*;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
@@ -15,14 +16,17 @@ import com.jala.backend.pond.repository.PondRepository;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.common.constants.FeedConstants;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -48,12 +52,14 @@ public class AnalyticsServiceImpl
 
     private final HarvestRepository harvestRepository;
 
-    private static final String SITE_NOT_FOUND = "Site not found.";
+    private final SiteAccessService siteAccessService;
 
     @Override
     @Transactional(readOnly = true)
     public FeedAnalyticsResponse getPondFeedAnalytics(
             UUID pondId) {
+
+        siteAccessService.checkPondAccess(pondId);
 
         Pond pond = pondRepository.findById(pondId)
                 .orElseThrow(() ->
@@ -133,10 +139,12 @@ public class AnalyticsServiceImpl
     public AnalyticsDashboardResponse getAnalyticsDashboard(
             UUID siteId) {
 
+        siteAccessService.checkSiteAccess(siteId);
+
         Site site =
                 siteRepository.findById(siteId)
                         .orElseThrow(() ->
-                                new ResourceNotFoundException(SITE_NOT_FOUND));
+                                new ResourceNotFoundException(MessageConstants.SITE_NOT_FOUND));
 
         SiteFeedAnalyticsResponse feed =
                 getSiteFeedAnalytics(siteId);
@@ -168,6 +176,8 @@ public class AnalyticsServiceImpl
     @Transactional(readOnly = true)
     public PondHarvestAnalyticsResponse getPondHarvestAnalytics(
             UUID pondId) {
+
+        siteAccessService.checkPondAccess(pondId);
 
         Pond pond = pondRepository.findById(pondId)
                 .orElseThrow(() ->
@@ -235,12 +245,15 @@ public class AnalyticsServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SiteHarvestAnalyticsResponse getSiteHarvestAnalytics(
             UUID siteId) {
 
+        siteAccessService.checkSiteAccess(siteId);
+
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(SITE_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.SITE_NOT_FOUND));
 
         LocalDate today = DateTimeUtil.today();
 
@@ -312,12 +325,15 @@ public class AnalyticsServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InventoryAnalyticsResponse getInventoryAnalytics(
             UUID siteId) {
 
+        siteAccessService.checkSiteAccess(siteId);
+
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(SITE_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.SITE_NOT_FOUND));
 
         FeedInventory inventory =
                 feedInventoryRepository.findBySiteId(siteId)
@@ -379,7 +395,9 @@ public class AnalyticsServiceImpl
 
         int bags =
                 inventory.getAvailableKg()
-                        .divide(new BigDecimal("25"))
+                        .divide(FeedConstants.DEFAULT_BAG_WEIGHT_KG,
+                                0,
+                                RoundingMode.DOWN)
                         .intValue();
 
         return InventoryAnalyticsResponse.builder()
@@ -405,12 +423,15 @@ public class AnalyticsServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SiteFeedAnalyticsResponse getSiteFeedAnalytics(
             UUID siteId) {
 
+        siteAccessService.checkSiteAccess(siteId);
+
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(SITE_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.SITE_NOT_FOUND));
 
         LocalDate today = DateTimeUtil.today();
 

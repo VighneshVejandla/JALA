@@ -9,6 +9,7 @@ import com.jala.backend.feeddelivery.dto.response.SiteDeliveryResponse;
 import com.jala.backend.feeddelivery.service.FeedDeliveryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class FeedDeliveryController {
         FeedDeliveryResponse response =
                 feedDeliveryService.createDelivery(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<FeedDeliveryResponse>builder()
                         .success(true)
                         .message("Feed delivery created successfully")
@@ -42,10 +43,12 @@ public class FeedDeliveryController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPERVISOR')")
-    public ResponseEntity<ApiResponse<List<FeedDeliveryResponse>>> getAllDeliveries() {
+    public ResponseEntity<ApiResponse<List<FeedDeliveryResponse>>> getAllDeliveries(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<FeedDeliveryResponse> response =
-                feedDeliveryService.getAllDeliveries();
+                feedDeliveryService.getAllDeliveries(page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<FeedDeliveryResponse>>builder()
@@ -84,7 +87,7 @@ public class FeedDeliveryController {
                         deliveryId,
                         request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<SiteDeliveryResponse>builder()
                         .success(true)
                         .message("Site delivery added successfully")

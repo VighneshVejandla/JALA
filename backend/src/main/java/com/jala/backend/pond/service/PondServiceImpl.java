@@ -10,6 +10,7 @@ import com.jala.backend.pond.mapper.PondMapper;
 import com.jala.backend.pond.repository.PondRepository;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,10 +27,13 @@ public class PondServiceImpl implements PondService {
     private final PondRepository pondRepository;
     private final SiteRepository siteRepository;
     private final PondMapper pondMapper;
+    private final SiteAccessService siteAccessService;
 
     @Override
     @Transactional
     public PondResponse createPond(CreatePondRequest request) {
+
+        siteAccessService.checkSiteAccess(request.getSiteId());
 
         log.info("Creating pond {}", request.getPondCode());
 
@@ -61,7 +65,17 @@ public class PondServiceImpl implements PondService {
     @Transactional(readOnly = true)
     public List<PondResponse> getAllPonds() {
 
-        return pondRepository.findAll()
+        List<UUID> accessibleSiteIds = siteAccessService.accessibleSiteIds();
+
+        if (accessibleSiteIds != null && accessibleSiteIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Pond> ponds = accessibleSiteIds == null
+                ? pondRepository.findAll()
+                : pondRepository.findBySiteIdInOrderByPondCode(accessibleSiteIds);
+
+        return ponds
                 .stream()
                 .map(pondMapper::toResponse)
                 .toList();
@@ -70,6 +84,8 @@ public class PondServiceImpl implements PondService {
     @Override
     @Transactional(readOnly = true)
     public List<PondResponse> getPondsBySite(UUID siteId) {
+
+        siteAccessService.checkSiteAccess(siteId);
 
         return pondRepository.findBySiteIdOrderByPondCode(siteId)
                 .stream()
@@ -83,6 +99,8 @@ public class PondServiceImpl implements PondService {
 
         Pond pond = getPondOrThrow(id);
 
+        siteAccessService.checkSiteAccess(pond.getSite().getId());
+
         return pondMapper.toResponse(pond);
     }
 
@@ -92,6 +110,8 @@ public class PondServiceImpl implements PondService {
                                   UpdatePondRequest request) {
 
         Pond pond = getPondOrThrow(id);
+
+        siteAccessService.checkSiteAccess(pond.getSite().getId());
 
         if (request.getPondCode() != null &&
                 !request.getPondCode().isBlank()) {
@@ -138,6 +158,8 @@ public class PondServiceImpl implements PondService {
 
         Pond pond = getPondOrThrow(id);
 
+        siteAccessService.checkSiteAccess(pond.getSite().getId());
+
         pond.setIsActive(true);
 
         pondRepository.save(pond);
@@ -151,6 +173,8 @@ public class PondServiceImpl implements PondService {
     public void deactivatePond(UUID id) {
 
         Pond pond = getPondOrThrow(id);
+
+        siteAccessService.checkSiteAccess(pond.getSite().getId());
 
         pond.setIsActive(false);
 

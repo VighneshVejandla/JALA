@@ -8,6 +8,7 @@ import com.jala.backend.pondcycle.dto.response.PondCycleResponse;
 import com.jala.backend.pondcycle.service.PondCycleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class PondCycleController {
 
         PondCycleResponse response = pondCycleService.createCycle(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<PondCycleResponse>builder()
                         .success(true)
                         .message("Pond cycle created successfully")
@@ -75,7 +76,7 @@ public class PondCycleController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PondCycleResponse>> updateCycle(
             @PathVariable UUID id,
-            @RequestBody UpdatePondCycleRequest request) {
+            @Valid @RequestBody UpdatePondCycleRequest request) {
 
         PondCycleResponse response =
                 pondCycleService.updateCycle(id, request);

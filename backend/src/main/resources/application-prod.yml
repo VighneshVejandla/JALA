@@ -1,11 +1,12 @@
-#  D:\JALA\backend\src\main\resources\application-prod.yml
-
 spring:
 
   datasource:
-    url: ${SUPABASE_URL}
+    # Dedicated JDBC URL — deliberately separate from SUPABASE_URL,
+    # which is the Supabase REST base used for storage.
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
@@ -15,6 +16,11 @@ spring:
 
   flyway:
     enabled: true
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
 
 logging:
   level:

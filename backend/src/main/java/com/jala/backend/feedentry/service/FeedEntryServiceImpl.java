@@ -13,16 +13,14 @@ import com.jala.backend.feedentry.repository.FeedEntryRepository;
 import com.jala.backend.feedschedule.entity.FeedSchedule;
 import com.jala.backend.feedschedule.repository.FeedScheduleRepository;
 import com.jala.backend.notification.service.NotificationService;
-import com.jala.backend.pond.entity.Pond;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.security.service.CurrentUserService;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import com.jala.backend.user.entity.User;
-import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +43,9 @@ public class FeedEntryServiceImpl
 
     private final FeedEntryMapper mapper;
 
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+
+    private final SiteAccessService siteAccessService;
 
     private final NotificationService notificationService;
 
@@ -55,6 +55,8 @@ public class FeedEntryServiceImpl
             CreateFeedEntryRequest request) {
 
         log.info("Creating feed entry");
+
+        siteAccessService.checkPondCycleAccess(request.getPondCycleId());
 
         PondCycle cycle = pondCycleRepository
                 .findById(request.getPondCycleId())
@@ -89,16 +91,7 @@ public class FeedEntryServiceImpl
                     "Feed already entered for this session today.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String employeeCode = authentication.getName();
-
-        User worker = userRepository
-                .findByEmployeeCode(employeeCode)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found"));
+        User worker = currentUserService.getCurrentUser();
 
         FeedEntry entry = mapper.toEntity(request);
 
@@ -109,8 +102,6 @@ public class FeedEntryServiceImpl
         entry.setCreatedBy(worker);
 
         FeedEntry saved = repository.save(entry);
-
-        Pond pond = cycle.getPond();
 
         notificationService.createFeedNotification(
                 cycle.getPond().getSite().getId(),
@@ -131,6 +122,8 @@ public class FeedEntryServiceImpl
             UUID pondCycleId,
             LocalDate date) {
 
+        siteAccessService.checkPondCycleAccess(pondCycleId);
+
         return repository
                 .findByPondCycleIdAndFeedDateAndStatus(
                         pondCycleId,
@@ -150,6 +143,9 @@ public class FeedEntryServiceImpl
             UpdateFeedEntryRequest request) {
 
         FeedEntry entry = getFeedEntryOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(
+                entry.getPondCycle().getId());
 
         if (entry.getPondCycle().getStatus()
                 != PondCycleStatus.ACTIVE) {
@@ -185,6 +181,9 @@ public class FeedEntryServiceImpl
 
         FeedEntry entry = getFeedEntryOrThrow(id);
 
+        siteAccessService.checkPondCycleAccess(
+                entry.getPondCycle().getId());
+
         if (entry.getStatus() ==
                 FeedEntryStatus.CANCELLED) {
 
@@ -192,16 +191,7 @@ public class FeedEntryServiceImpl
                     "Feed entry already cancelled.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found"));
+        User user = currentUserService.getCurrentUser();
 
         entry.setStatus(
                 FeedEntryStatus.CANCELLED);
@@ -222,6 +212,9 @@ public class FeedEntryServiceImpl
     public void restoreFeedEntry(UUID id) {
 
         FeedEntry entry = getFeedEntryOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(
+                entry.getPondCycle().getId());
 
         if (entry.getStatus()
                 == FeedEntryStatus.ACTIVE) {
