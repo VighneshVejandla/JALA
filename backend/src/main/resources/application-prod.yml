@@ -1,9 +1,11 @@
+#  D:\JALA\backend\src\main\resources\application-prod.yml
+
 spring:
 
   datasource:
     # Dedicated JDBC URL — deliberately separate from SUPABASE_URL,
     # which is the Supabase REST base used for storage.
-    url: ${DB_URL}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver

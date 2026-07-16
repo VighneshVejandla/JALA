@@ -1,11 +1,11 @@
+#  D:\JALA\backend\src\main\resources\application.yml
+
 spring:
   application:
     name: JALA
 
-  # The active profile must be supplied per environment, e.g.
-  # SPRING_PROFILES_ACTIVE=dev (local) / prod (deployment).
-  # No default on purpose: a deployment that forgets to set it
-  # fails fast instead of silently booting with dev settings.
+  profiles:
+      active: dev
 
   config:
     import: optional:file:.env.properties
