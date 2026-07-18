@@ -39,14 +39,21 @@ public class LoginAttemptService {
      */
     public void checkNotLocked(String key) {
 
-        evictStaleEntries();
+        String normalized = normalize(key);
+        Attempt attempt = attempts.get(normalized);
 
-        Attempt attempt = attempts.get(normalize(key));
+        if (attempt == null) {
+            return;
+        }
 
-        if (attempt != null
-                && attempt.failures() >= MAX_FAILURES
-                && !isStale(attempt)) {
+        // Lazily drop this key once its lockout window has elapsed, so the
+        // hot path stays O(1) instead of scanning the whole map per attempt.
+        if (isStale(attempt)) {
+            attempts.remove(normalized, attempt);
+            return;
+        }
 
+        if (attempt.failures() >= MAX_FAILURES) {
             throw new TooManyRequestsException(LOCKED_MESSAGE);
         }
     }
@@ -66,12 +73,6 @@ public class LoginAttemptService {
     public void reset(String key) {
 
         attempts.remove(normalize(key));
-    }
-
-    /** Opportunistic cleanup so abandoned keys do not accumulate. */
-    private void evictStaleEntries() {
-
-        attempts.values().removeIf(this::isStale);
     }
 
     private boolean isStale(Attempt attempt) {

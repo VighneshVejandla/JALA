@@ -48,6 +48,11 @@ public class StorageServiceImpl implements StorageService {
         try {
             byte[] fileBytes = file.getBytes();
 
+            // x-upsert is intentionally NOT set: silent overwrite of an
+            // existing object is a security risk (flagged in review). Object
+            // names are unique per entity+sequence, so collisions are not
+            // expected; a rare retry after a partial failure surfaces as a
+            // storage error rather than silently clobbering data.
             restClient.post()
                     .uri(uploadUrl)
                     .header("Authorization", "Bearer " + storageProperties.getServiceRoleKey())

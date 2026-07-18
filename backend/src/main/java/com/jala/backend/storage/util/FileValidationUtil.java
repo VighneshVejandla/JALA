@@ -4,6 +4,7 @@ import com.jala.backend.storage.exception.FileStorageException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,7 +25,10 @@ public final class FileValidationUtil {
             {(byte) 0x89, 0x50, 0x4E, 0x47};
 
     private static final byte[] RIFF_MAGIC =
-            {0x52, 0x49, 0x46, 0x46}; // WEBP container
+            {0x52, 0x49, 0x46, 0x46}; // "RIFF" container header (bytes 0-3)
+
+    private static final byte[] WEBP_MAGIC =
+            {0x57, 0x45, 0x42, 0x50}; // "WEBP" form type (bytes 8-11)
 
     private FileValidationUtil() {
     }
@@ -77,17 +81,22 @@ public final class FileValidationUtil {
 
         byte[] header;
 
-        try {
-            header = file.getInputStream().readNBytes(4);
+        // Read enough for the WEBP form type at bytes 8-11, and close the
+        // stream (try-with-resources) so no file handle is leaked.
+        try (InputStream in = file.getInputStream()) {
+            header = in.readNBytes(12);
         } catch (IOException e) {
             throw new FileStorageException(
                     "Unable to read uploaded file", e);
         }
 
         boolean isImage =
-                startsWith(header, JPEG_MAGIC)
-                        || startsWith(header, PNG_MAGIC)
-                        || startsWith(header, RIFF_MAGIC);
+                startsWith(header, 0, JPEG_MAGIC)
+                        || startsWith(header, 0, PNG_MAGIC)
+                        // WEBP: "RIFF"...."WEBP" — a bare RIFF (e.g. WAV,
+                        // AVI) must not pass as an image.
+                        || (startsWith(header, 0, RIFF_MAGIC)
+                                && startsWith(header, 8, WEBP_MAGIC));
 
         if (!isImage) {
             throw new FileStorageException(
@@ -95,10 +104,13 @@ public final class FileValidationUtil {
         }
     }
 
-    private static boolean startsWith(byte[] data, byte[] prefix) {
+    private static boolean startsWith(byte[] data, int offset, byte[] expected) {
 
-        return data.length >= prefix.length
-                && Arrays.equals(
-                        Arrays.copyOf(data, prefix.length), prefix);
+        if (data.length < offset + expected.length) {
+            return false;
+        }
+        return Arrays.equals(
+                Arrays.copyOfRange(data, offset, offset + expected.length),
+                expected);
     }
 }

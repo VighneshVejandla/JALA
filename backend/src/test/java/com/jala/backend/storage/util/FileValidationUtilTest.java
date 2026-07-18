@@ -144,12 +144,28 @@ class FileValidationUtilTest {
 
         @Test
         void acceptsRiffWebpMagicBytes() {
+            // Full WEBP signature: "RIFF" + 4-byte size + "WEBP".
             MockMultipartFile file = fileWithBytes(new byte[]{
-                    0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00});
+                    0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00,
+                    0x57, 0x45, 0x42, 0x50});
 
             assertThatCode(() ->
                     FileValidationUtil.requireImageContent(file))
                     .doesNotThrowAnyException();
+        }
+
+        @Test
+        void rejectsBareRiffThatIsNotWebp() {
+            // "RIFF" container that is not WEBP (e.g. a WAV/AVI) must be
+            // rejected — a bare RIFF header is not enough.
+            MockMultipartFile file = fileWithBytes(new byte[]{
+                    0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00,
+                    0x57, 0x41, 0x56, 0x45}); // "WAVE"
+
+            assertThatThrownBy(() ->
+                    FileValidationUtil.requireImageContent(file))
+                    .isInstanceOf(FileStorageException.class)
+                    .hasMessage("File content is not a supported image format");
         }
 
         @Test

@@ -1,6 +1,7 @@
 package com.jala.backend.common.exception;
 
 import com.jala.backend.common.response.ApiResponse;
+import com.jala.backend.storage.exception.FileStorageException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -109,6 +110,20 @@ public class GlobalExceptionHandler {
 
         return error(HttpStatus.PAYLOAD_TOO_LARGE,
                 "Uploaded file exceeds the maximum allowed size");
+    }
+
+    /**
+     * Rejected uploads (bad extension, path-traversal, unsupported or
+     * mislabeled content) are client errors — return 400 with the
+     * envelope instead of letting them fall through to a generic 500.
+     */
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ApiResponse<Void>> handleFileStorage(
+            FileStorageException ex) {
+
+        log.warn("File storage rejected an upload: {}", ex.getMessage());
+
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(TooManyRequestsException.class)
