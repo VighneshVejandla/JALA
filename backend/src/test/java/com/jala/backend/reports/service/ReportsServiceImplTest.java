@@ -215,4 +215,35 @@ class ReportsServiceImplTest {
         assertThat(result.getTotalMedicineQuantity()).isEqualByComparingTo("3");
         assertThat(result.getDetails()).hasSize(1);
     }
+
+    @Test
+    @DisplayName("getDashboard composes the sub-reports/charts via the self proxy")
+    void getDashboard_success() {
+        // getDashboard delegates to the sibling methods through the injected
+        // self proxy; point it at a mock so this test covers the composition.
+        ReportsService selfProxy =
+                org.mockito.Mockito.mock(ReportsService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                service, "self", selfProxy);
+
+        when(siteRepository.findById(site.getId()))
+                .thenReturn(Optional.of(site));
+        when(selfProxy.getRevenueReport(any()))
+                .thenReturn(RevenueReportResponse.builder().build());
+        when(selfProxy.getFeedReport(any()))
+                .thenReturn(com.jala.backend.reports.dto.response
+                        .FeedReportResponse.builder().build());
+        when(selfProxy.getMedicineReport(any()))
+                .thenReturn(com.jala.backend.reports.dto.response
+                        .MedicineReportResponse.builder().build());
+        when(selfProxy.getRevenueChart(site.getId())).thenReturn(List.of());
+        when(selfProxy.getFeedChart(site.getId())).thenReturn(List.of());
+        when(selfProxy.getHarvestChart(site.getId())).thenReturn(List.of());
+
+        var result = service.getDashboard(site.getId());
+
+        assertThat(result.getSiteCode()).isEqualTo("S-001");
+        assertThat(result.getCharts()).isNotNull();
+        verify(siteAccessService).checkSiteAccess(site.getId());
+    }
 }

@@ -22,6 +22,8 @@ import com.jala.backend.site.repository.SiteRepository;
 import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,12 @@ public class AnalyticsServiceImpl
     private final HarvestRepository harvestRepository;
 
     private final SiteAccessService siteAccessService;
+
+    // Self-reference (proxy) so the dashboard's sub-analytics calls go
+    // through the transactional proxy instead of a self-invocation.
+    @Lazy
+    @Autowired
+    private AnalyticsService self;
 
     @Override
     @Transactional(readOnly = true)
@@ -147,13 +155,13 @@ public class AnalyticsServiceImpl
                                 new ResourceNotFoundException(MessageConstants.SITE_NOT_FOUND));
 
         SiteFeedAnalyticsResponse feed =
-                getSiteFeedAnalytics(siteId);
+                self.getSiteFeedAnalytics(siteId);
 
         InventoryAnalyticsResponse inventory =
-                getInventoryAnalytics(siteId);
+                self.getInventoryAnalytics(siteId);
 
         SiteHarvestAnalyticsResponse harvest =
-                getSiteHarvestAnalytics(siteId);
+                self.getSiteHarvestAnalytics(siteId);
 
         return AnalyticsDashboardResponse.builder()
 

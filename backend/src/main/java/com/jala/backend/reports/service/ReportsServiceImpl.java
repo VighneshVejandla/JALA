@@ -20,6 +20,8 @@ import com.jala.backend.site.repository.SiteRepository;
 import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +57,13 @@ public class ReportsServiceImpl
     private final MedicinePhotoRepository medicinePhotoRepository;
 
     private final SiteAccessService siteAccessService;
+
+    // Self-reference (proxy) so getDashboard's calls to the other report
+    // methods go through the transactional proxy. @Lazy breaks the
+    // constructor cycle.
+    @Lazy
+    @Autowired
+    private ReportsService self;
 
 
     @Override
@@ -287,23 +296,26 @@ public class ReportsServiceImpl
         filter.setToDate(
                 DateTimeUtil.today());
 
+        // Called via the injected proxy (self) so each sub-report runs in
+        // its own declared transaction, rather than a self-invocation that
+        // would bypass Spring's transactional proxy.
         RevenueReportResponse revenue =
-                getRevenueReport(filter);
+                self.getRevenueReport(filter);
 
         FeedReportResponse feed =
-                getFeedReport(filter);
+                self.getFeedReport(filter);
 
         MedicineReportResponse medicine =
-                getMedicineReport(filter);
+                self.getMedicineReport(filter);
 
         ChartsResponse charts =
                 ChartsResponse.builder()
                         .revenue(
-                                getRevenueChart(siteId))
+                                self.getRevenueChart(siteId))
                         .feed(
-                                getFeedChart(siteId))
+                                self.getFeedChart(siteId))
                         .harvest(
-                                getHarvestChart(siteId))
+                                self.getHarvestChart(siteId))
                         .build();
 
         return ReportsDashboardResponse.builder()

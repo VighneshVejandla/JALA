@@ -16,6 +16,9 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+// The jjwt builder API (issuedAt/expiration) takes java.util.Date, so the
+// java.time-only rule cannot be satisfied here.
+@SuppressWarnings("java:S2143")
 public class JwtService {
 
     /** Claim carrying the user's token version at issue time. */

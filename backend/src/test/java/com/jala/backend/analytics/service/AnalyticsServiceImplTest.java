@@ -213,6 +213,11 @@ class AnalyticsServiceImplTest {
     @Test
     @DisplayName("getAnalyticsDashboard composes feed, inventory and harvest sections")
     void getAnalyticsDashboard_success() {
+        // The dashboard delegates to sibling methods via the injected self
+        // proxy; in a unit test point it back at the instance under test.
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                service, "self", service);
+
         com.jala.backend.feedinventory.entity.FeedInventory inv =
                 com.jala.backend.feedinventory.entity.FeedInventory.builder()
                         .id(UUID.randomUUID()).site(site)

@@ -13,6 +13,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
@@ -36,6 +37,18 @@ class StorageServiceImplTest {
 
     private MultipartFile png() {
         return new MockMultipartFile("f", "scan.png", "image/png", PNG);
+    }
+
+    @Test
+    @DisplayName("buildObjectPath URL-encodes the entityId and file-name segments")
+    void buildObjectPath_encodesSegments() {
+        String path = service.buildObjectPath(
+                StorageFolder.MEDICINE, "entity 1", "scan file.png");
+
+        assertThat(path).isEqualTo(
+                StorageFolder.MEDICINE.getFolder()
+                        + "/entity%201/scan%20file.png");
+        assertThat(path).doesNotContain(" ");
     }
 
     @Test
