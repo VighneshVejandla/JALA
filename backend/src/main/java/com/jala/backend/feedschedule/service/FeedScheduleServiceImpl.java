@@ -6,6 +6,7 @@ import com.jala.backend.feedschedule.dto.response.FeedScheduleResponse;
 import com.jala.backend.feedschedule.mapper.FeedScheduleMapper;
 import com.jala.backend.feedschedule.repository.FeedScheduleRepository;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,10 +38,14 @@ public class FeedScheduleServiceImpl
 
     private final FeedScheduleMapper mapper;
 
+    private final SiteAccessService siteAccessService;
+
     @Override
     @Transactional
     public List<FeedScheduleResponse> createSchedules(
             CreateFeedScheduleRequest request) {
+
+        siteAccessService.checkPondCycleAccess(request.getPondCycleId());
 
         log.info("Creating feed schedule for pond cycle {}",
                 request.getPondCycleId());
@@ -110,6 +115,8 @@ public class FeedScheduleServiceImpl
     public List<FeedScheduleResponse> getSchedulesByCycle(
             UUID pondCycleId) {
 
+        siteAccessService.checkPondCycleAccess(pondCycleId);
+
         return repository.findByPondCycleIdOrderBySessionNumber(
                         pondCycleId)
                 .stream()
@@ -124,6 +131,9 @@ public class FeedScheduleServiceImpl
             UpdateFeedScheduleRequest request) {
 
         FeedSchedule schedule = getScheduleOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(
+                schedule.getPondCycle().getId());
 
         PondCycle cycle = schedule.getPondCycle();
 
@@ -166,6 +176,9 @@ public class FeedScheduleServiceImpl
 
         FeedSchedule schedule = getScheduleOrThrow(id);
 
+        siteAccessService.checkPondCycleAccess(
+                schedule.getPondCycle().getId());
+
         schedule.setIsActive(false);
 
         repository.save(schedule);
@@ -179,6 +192,9 @@ public class FeedScheduleServiceImpl
     public void activateSchedule(UUID id) {
 
         FeedSchedule schedule = getScheduleOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(
+                schedule.getPondCycle().getId());
 
         schedule.setIsActive(true);
 

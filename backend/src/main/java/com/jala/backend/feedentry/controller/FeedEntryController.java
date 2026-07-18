@@ -10,6 +10,7 @@ import com.jala.backend.feedentry.service.FeedEntryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class FeedEntryController {
         FeedEntryResponse response =
                 service.createFeedEntry(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<FeedEntryResponse>builder()
                         .success(true)
                         .message("Feed entry created successfully")
@@ -68,7 +69,7 @@ public class FeedEntryController {
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<FeedEntryResponse>> updateFeedEntry(
             @PathVariable UUID id,
-            @RequestBody UpdateFeedEntryRequest request) {
+            @Valid @RequestBody UpdateFeedEntryRequest request) {
 
         FeedEntryResponse response =
                 service.updateFeedEntry(id, request);

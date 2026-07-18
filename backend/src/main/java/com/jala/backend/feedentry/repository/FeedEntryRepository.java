@@ -2,6 +2,8 @@ package com.jala.backend.feedentry.repository;
 
 import com.jala.backend.feedentry.entity.FeedEntry;
 import com.jala.backend.feedentry.enums.FeedEntryStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -207,6 +209,9 @@ public interface FeedEntryRepository
     @Query("""
             SELECT f
             FROM FeedEntry f
+            JOIN FETCH f.pondCycle
+            JOIN FETCH f.feedSchedule
+            JOIN FETCH f.createdBy
             WHERE f.status = com.jala.backend.feedentry.enums.FeedEntryStatus.ACTIVE
             AND f.feedDate BETWEEN :fromDate AND :toDate
             AND f.pondCycle.pond.site.id = :siteId
@@ -219,28 +224,47 @@ public interface FeedEntryRepository
             LocalDate fromDate,
             LocalDate toDate);
 
+    /** (month, fed kg total) rows — aggregation happens in SQL. */
     @Query("""
-            SELECT f
+            SELECT MONTH(f.feedDate), COALESCE(SUM(f.feedQuantityKg), 0)
             FROM FeedEntry f
             WHERE f.status = com.jala.backend.feedentry.enums.FeedEntryStatus.ACTIVE
             AND f.pondCycle.pond.site.id = :siteId
+            GROUP BY MONTH(f.feedDate)
             """)
-    List<FeedEntry> findAllBySiteForChart(
+    List<Object[]> sumFeedKgByMonth(
             UUID siteId);
 
     long countByPondCycleIdAndStatus(
             UUID pondCycleId,
             FeedEntryStatus status);
 
-    List<FeedEntry> findByPondCyclePondIdOrderByFeedDateDescIdDesc(
+    /** (cycleId, active entry count) per cycle of the pond in one query. */
+    @Query("""
+            SELECT f.pondCycle.id, COUNT(f)
+            FROM FeedEntry f
+            WHERE f.pondCycle.pond.id = :pondId
+            AND f.status = com.jala.backend.feedentry.enums.FeedEntryStatus.ACTIVE
+            GROUP BY f.pondCycle.id
+            """)
+    List<Object[]> countActiveByCycleForPond(
             UUID pondId);
 
+    @EntityGraph(attributePaths = {"feedSchedule", "createdBy", "cancelledBy"})
+    List<FeedEntry> findByPondCyclePondIdOrderByFeedDateDescIdDesc(
+            UUID pondId,
+            Pageable pageable);
+
+    @EntityGraph(attributePaths = {"pondCycle", "feedSchedule"})
     List<FeedEntry> findByPondCyclePondId(
             UUID pondId);
 
     @Query("""
         SELECT f
         FROM FeedEntry f
+        JOIN FETCH f.pondCycle pc
+        JOIN FETCH pc.pond p
+        JOIN FETCH p.site
         WHERE f.status =
               com.jala.backend.feedentry.enums.FeedEntryStatus.ACTIVE
         AND (
@@ -249,6 +273,7 @@ public interface FeedEntryRepository
         ORDER BY f.feedDate DESC
         """)
     List<FeedEntry> search(
-            String keyword);
+            String keyword,
+            Pageable pageable);
 
 }

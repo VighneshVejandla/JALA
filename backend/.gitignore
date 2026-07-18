@@ -4,6 +4,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Environment / secrets ###
+.env
+.env.*
+!.env.example
+.env.properties
+
 ### STS ###
 .apt_generated
 .classpath
@@ -14,17 +20,11 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
-.env.properties
 
-.idea/
-
-target/
-
-*.iml
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

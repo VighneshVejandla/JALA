@@ -23,4 +23,10 @@ public interface UserService {
 
     boolean adminExists();
 
+    void assignSite(UUID userId, UUID siteId);
+
+    void unassignSite(UUID userId, UUID siteId);
+
+    List<UUID> getAssignedSiteIds(UUID userId);
+
 }

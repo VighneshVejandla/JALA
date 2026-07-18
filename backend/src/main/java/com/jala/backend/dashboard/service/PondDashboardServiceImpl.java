@@ -1,5 +1,6 @@
 package com.jala.backend.dashboard.service;
 
+import com.jala.backend.common.constants.FeedConstants;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
 import com.jala.backend.dashboard.dto.response.HomeDashboardResponse;
@@ -11,7 +12,6 @@ import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
 import com.jala.backend.harvest.entity.Harvest;
 import com.jala.backend.harvest.enums.HarvestStatus;
 import com.jala.backend.harvest.repository.HarvestRepository;
-import com.jala.backend.medicine.enums.MedicineStatus;
 import com.jala.backend.medicine.repository.MedicineRepository;
 import com.jala.backend.medicinephoto.repository.MedicinePhotoRepository;
 import com.jala.backend.notification.enums.NotificationStatus;
@@ -23,6 +23,7 @@ import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -58,10 +59,14 @@ public class PondDashboardServiceImpl
 
     private final NotificationRepository notificationRepository;
 
+    private final SiteAccessService siteAccessService;
+
     @Override
     @Transactional(readOnly = true)
     public PondDashboardResponse getDashboard(
             UUID pondId) {
+
+        siteAccessService.checkPondAccess(pondId);
 
         Pond pond = pondRepository.findById(pondId)
                 .orElseThrow(() ->
@@ -112,17 +117,11 @@ public class PondDashboardServiceImpl
                 medicineRepository.getLastMedicineDate(
                         activeCycle.getId());
 
+        // Single aggregate instead of one count query per medicine entry.
         Integer medicinePhotoCount =
-                medicineRepository
-                        .findByPondCycleIdAndStatusOrderByCreatedAtDesc(
-                                activeCycle.getId(),
-                                MedicineStatus.ACTIVE)
-                        .stream()
-                        .mapToInt(entry ->
-                                (int) medicinePhotoRepository
-                                        .countByMedicineEntryId(
-                                                entry.getId()))
-                        .sum();
+                (int) medicinePhotoRepository
+                        .countByCycleWithActiveEntries(
+                                activeCycle.getId());
 
         Integer harvestCount =
                 harvestRepository.getHarvestCount(
@@ -219,6 +218,8 @@ public class PondDashboardServiceImpl
     public HomeDashboardResponse getHomeDashboard(
             UUID siteId) {
 
+        siteAccessService.checkSiteAccess(siteId);
+
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -258,12 +259,9 @@ public class PondDashboardServiceImpl
                         siteId,
                         NotificationStatus.UNREAD);
 
-        BigDecimal threshold =
-                BigDecimal.valueOf(150);
-
         boolean lowInventory =
                 inventory.getAvailableKg()
-                        .compareTo(threshold) <= 0;
+                        .compareTo(FeedConstants.LOW_INVENTORY_THRESHOLD_KG) <= 0;
 
         return HomeDashboardResponse.builder()
 

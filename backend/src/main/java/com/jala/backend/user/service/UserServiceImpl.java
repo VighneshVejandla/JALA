@@ -5,6 +5,7 @@ import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.role.entity.Role;
 import com.jala.backend.role.repository.RoleRepository;
+import com.jala.backend.siteaccess.service.SiteAssignmentService;
 import com.jala.backend.user.dto.request.UpdateUserRequest;
 import com.jala.backend.user.dto.request.CreateUserRequest;
 import com.jala.backend.user.dto.response.UserResponse;
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private static final String USER_NOT_FOUND = "User not found";
+    private final SiteAssignmentService siteAssignmentService;
 
     private void validateFirstAdminCreation(CreateUserRequest request) {
 
@@ -112,7 +113,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.USER_NOT_FOUND));
 
         return userMapper.toResponse(user);
     }
@@ -128,6 +129,12 @@ public class UserServiceImpl implements UserService {
             Role role = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() ->
                             new ResourceNotFoundException("Role not found"));
+
+            if (!role.getId().equals(user.getRole().getId())) {
+                // Role changed: revoke outstanding tokens so the new
+                // authorities take effect immediately.
+                revokeTokens(user);
+            }
 
             user.setRole(role);
         }
@@ -163,6 +170,12 @@ public class UserServiceImpl implements UserService {
         }
 
         if (request.getIsActive() != null) {
+
+            if (Boolean.FALSE.equals(request.getIsActive()) &&
+                    Boolean.TRUE.equals(user.getIsActive())) {
+                revokeTokens(user);
+            }
+
             user.setIsActive(request.getIsActive());
         }
 
@@ -180,7 +193,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.USER_NOT_FOUND));
 
         user.setIsActive(true);
 
@@ -195,25 +208,50 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.USER_NOT_FOUND));
 
         user.setIsActive(false);
+
+        revokeTokens(user);
 
         userRepository.save(user);
 
         log.info("User {} deactivated", user.getEmployeeCode());
     }
 
+    /**
+     * Invalidates every JWT issued before this call by moving the user's
+     * token version past the version embedded in those tokens.
+     */
+    private void revokeTokens(User user) {
+        user.setTokenVersion(user.getTokenVersion() + 1);
+    }
+
     private User getUserOrThrow(UUID id) {
 
         return userRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(USER_NOT_FOUND));
+                        new ResourceNotFoundException(MessageConstants.USER_NOT_FOUND));
     }
 
     @Override
     public boolean adminExists() {
         return userRepository.existsByRole_Name("ADMIN");
+    }
+
+    @Override
+    public void assignSite(UUID userId, UUID siteId) {
+        siteAssignmentService.assignSite(userId, siteId);
+    }
+
+    @Override
+    public void unassignSite(UUID userId, UUID siteId) {
+        siteAssignmentService.unassignSite(userId, siteId);
+    }
+
+    @Override
+    public List<UUID> getAssignedSiteIds(UUID userId) {
+        return siteAssignmentService.getAssignedSiteIds(userId);
     }
 
 }

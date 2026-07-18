@@ -3,6 +3,7 @@ package com.jala.backend.harvest.service;
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
+import com.jala.backend.common.util.PageRequestUtil;
 import com.jala.backend.harvest.dto.request.CancelHarvestRequest;
 import com.jala.backend.harvest.dto.request.CreateHarvestRequest;
 import com.jala.backend.harvest.dto.response.HarvestResponse;
@@ -14,19 +15,18 @@ import com.jala.backend.pond.entity.Pond;
 import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.security.service.CurrentUserService;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import com.jala.backend.storage.enums.StorageFolder;
 import com.jala.backend.storage.enums.StorageModule;
 import com.jala.backend.storage.service.StorageService;
 import com.jala.backend.storage.util.FileNameGenerator;
+import com.jala.backend.storage.util.FileValidationUtil;
 import com.jala.backend.user.entity.User;
-import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,13 +40,17 @@ public class HarvestServiceImpl implements HarvestService {
     private final HarvestRepository repository;
     private final HarvestMapper mapper;
     private final PondCycleRepository pondCycleRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+    private final SiteAccessService siteAccessService;
     private final StorageService storageService;
 
     @Override
     @Transactional
     public HarvestResponse createHarvest(
             CreateHarvestRequest request) {
+
+        siteAccessService.checkPondCycleAccess(
+                request.getPondCycleId());
 
         PondCycle pondCycle = pondCycleRepository.findById(
                         request.getPondCycleId())
@@ -63,18 +67,15 @@ public class HarvestServiceImpl implements HarvestService {
                     "This pond cycle has already been harvested.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+        User user = currentUserService.getCurrentUser();
 
         Pond pond = pondCycle.getPond();
 
-        String extension = getExtension(
+        String extension =
+                FileValidationUtil.extractExtension(
+                        request.getBillPhoto().getOriginalFilename());
+
+        FileValidationUtil.requireImageContent(
                 request.getBillPhoto());
 
         long sequence =
@@ -121,7 +122,7 @@ public class HarvestServiceImpl implements HarvestService {
         Harvest saved =
                 repository.save(harvest);
 
-// First deactivate the current cycle
+// First mark the current cycle as HARVESTED
         pondCycle.setStatus(PondCycleStatus.HARVESTED);
         pondCycleRepository.saveAndFlush(pondCycle);
 
@@ -138,11 +139,16 @@ public class HarvestServiceImpl implements HarvestService {
     @Override
     @Transactional(readOnly = true)
     public List<HarvestResponse> getHarvests(
-            UUID pondCycleId) {
+            UUID pondCycleId,
+            Integer page,
+            Integer size) {
+
+        siteAccessService.checkPondCycleAccess(pondCycleId);
 
         return repository
                 .findByPondCycleIdOrderByHarvestDateDesc(
-                        pondCycleId)
+                        pondCycleId,
+                        PageRequestUtil.of(page, size))
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -154,15 +160,6 @@ public class HarvestServiceImpl implements HarvestService {
             UUID harvestId,
             CancelHarvestRequest request) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
-
         Harvest harvest = repository
                 .findByIdAndStatus(
                         harvestId,
@@ -170,6 +167,11 @@ public class HarvestServiceImpl implements HarvestService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Harvest not found."));
+
+        siteAccessService.checkPondCycleAccess(
+                harvest.getPondCycle().getId());
+
+        User user = currentUserService.getCurrentUser();
 
         PondCycle harvestedCycle =
                 harvest.getPondCycle();
@@ -225,18 +227,6 @@ public class HarvestServiceImpl implements HarvestService {
         log.info(
                 "Created empty Pond Cycle {}",
                 nextCycle.getCycleNumber());
-    }
-
-    private String getExtension(
-            MultipartFile file) {
-
-        String original = file.getOriginalFilename();
-
-        if (original == null || !original.contains(".")) {
-            throw new BadRequestException("Invalid file name.");
-        }
-
-        return original.substring(original.lastIndexOf('.') + 1);
     }
 
 }

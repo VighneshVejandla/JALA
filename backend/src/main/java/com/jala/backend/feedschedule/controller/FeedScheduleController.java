@@ -60,7 +60,7 @@ public class FeedScheduleController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<FeedScheduleResponse>> updateSchedule(
             @PathVariable UUID id,
-            @RequestBody UpdateFeedScheduleRequest request) {
+            @Valid @RequestBody UpdateFeedScheduleRequest request) {
 
         FeedScheduleResponse response =
                 service.updateSchedule(id, request);

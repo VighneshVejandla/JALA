@@ -2,6 +2,8 @@ package com.jala.backend.medicine.repository;
 
 import com.jala.backend.medicine.entity.MedicineEntry;
 import com.jala.backend.medicine.enums.MedicineStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -14,9 +16,11 @@ import java.util.UUID;
 public interface MedicineRepository
         extends JpaRepository<MedicineEntry, UUID> {
 
+    @EntityGraph(attributePaths = {"pondCycle", "createdBy"})
     List<MedicineEntry> findByPondCycleIdAndStatusOrderByCreatedAtDesc(
             UUID pondCycleId,
-            MedicineStatus status);
+            MedicineStatus status,
+            Pageable pageable);
 
     @Query("""
             SELECT COUNT(m)
@@ -40,9 +44,11 @@ public interface MedicineRepository
     @Query("""
             SELECT m
             FROM MedicineEntry m
+            JOIN FETCH m.pondCycle
+            JOIN FETCH m.createdBy
             WHERE m.status = com.jala.backend.medicine.enums.MedicineStatus.ACTIVE
-            AND m.createdAt BETWEEN :fromDateTimeStart
-            AND :fromDateTimeEnd
+            AND m.createdAt >= :fromDateTime
+            AND m.createdAt < :toDateTimeExclusive
             AND m.pondCycle.pond.site.id = :siteId
             AND (:pondId IS NULL
                  OR m.pondCycle.pond.id = :pondId)
@@ -51,8 +57,8 @@ public interface MedicineRepository
     List<MedicineEntry> findMedicineReport(
             UUID siteId,
             UUID pondId,
-            LocalDateTime fromDateTimeStart,
-            LocalDateTime fromDateTimeEnd);
+            LocalDateTime fromDateTime,
+            LocalDateTime toDateTimeExclusive);
 
     @Query("""
             SELECT MAX(m.createdAt)
@@ -66,6 +72,9 @@ public interface MedicineRepository
     @Query("""
         SELECT m
         FROM MedicineEntry m
+        JOIN FETCH m.pondCycle pc
+        JOIN FETCH pc.pond p
+        JOIN FETCH p.site
         WHERE m.status =
               com.jala.backend.medicine.enums.MedicineStatus.ACTIVE
         AND (
@@ -74,15 +83,30 @@ public interface MedicineRepository
         ORDER BY m.createdAt DESC
         """)
     List<MedicineEntry> search(
-            String keyword);
+            String keyword,
+            Pageable pageable);
 
     long countByPondCycleIdAndStatus(
             UUID pondCycleId,
             MedicineStatus status);
 
-    List<MedicineEntry> findByPondCyclePondIdOrderByCreatedAtDesc(
+    /** (cycleId, active entry count) per cycle of the pond in one query. */
+    @Query("""
+            SELECT m.pondCycle.id, COUNT(m)
+            FROM MedicineEntry m
+            WHERE m.pondCycle.pond.id = :pondId
+            AND m.status = com.jala.backend.medicine.enums.MedicineStatus.ACTIVE
+            GROUP BY m.pondCycle.id
+            """)
+    List<Object[]> countActiveByCycleForPond(
             UUID pondId);
 
+    @EntityGraph(attributePaths = {"pondCycle", "createdBy", "cancelledBy"})
+    List<MedicineEntry> findByPondCyclePondIdOrderByCreatedAtDesc(
+            UUID pondId,
+            Pageable pageable);
+
+    @EntityGraph(attributePaths = {"pondCycle"})
     List<MedicineEntry> findByPondCyclePondId(
             UUID pondId);
 }

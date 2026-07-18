@@ -3,6 +3,7 @@ package com.jala.backend.storage.service;
 import com.jala.backend.storage.config.StorageProperties;
 import com.jala.backend.storage.enums.StorageFolder;
 import com.jala.backend.storage.exception.FileStorageException;
+import com.jala.backend.storage.util.FileValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -12,7 +13,6 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -26,8 +26,6 @@ public class StorageServiceImpl implements StorageService {
             "image/png",
             "image/webp"
     );
-
-    private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "webp");
 
     private static final long MAX_FILE_SIZE_BYTES = 10L * 1024 * 1024; // 10 MB
 
@@ -50,12 +48,16 @@ public class StorageServiceImpl implements StorageService {
         try {
             byte[] fileBytes = file.getBytes();
 
+            // x-upsert is intentionally NOT set: silent overwrite of an
+            // existing object is a security risk (flagged in review). Object
+            // names are unique per entity+sequence, so collisions are not
+            // expected; a rare retry after a partial failure surfaces as a
+            // storage error rather than silently clobbering data.
             restClient.post()
                     .uri(uploadUrl)
                     .header("Authorization", "Bearer " + storageProperties.getServiceRoleKey())
                     .header("apikey", storageProperties.getServiceRoleKey())
                     .header("Content-Type", file.getContentType())
-                    .header("x-upsert", "true")
                     .body(fileBytes)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
@@ -93,6 +95,9 @@ public class StorageServiceImpl implements StorageService {
             throw new FileStorageException("File name must be provided");
         }
 
+        FileValidationUtil.rejectPathTraversal(entityId);
+        FileValidationUtil.rejectPathTraversal(fileName);
+
         if (file.getSize() > MAX_FILE_SIZE_BYTES) {
             throw new FileStorageException("File size exceeds the maximum allowed limit of 10 MB");
         }
@@ -102,18 +107,11 @@ public class StorageServiceImpl implements StorageService {
             throw new FileStorageException("Unsupported image type: " + contentType);
         }
 
-        String extension = extractExtension(fileName);
-        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase(java.util.Locale.ROOT))) {
-            throw new FileStorageException("Unsupported file extension: " + extension);
-        }
-    }
+        // Validates the extension (allow-list) and rejects traversal sequences.
+        FileValidationUtil.extractExtension(fileName);
 
-    private String extractExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex < 0 || dotIndex == fileName.length() - 1) {
-            throw new FileStorageException("File name must include a valid extension: " + fileName);
-        }
-        return fileName.substring(dotIndex + 1);
+        // Magic-byte sniffing: the real content must match a supported image type.
+        FileValidationUtil.requireImageContent(file);
     }
 
     private String buildObjectPath(StorageFolder folder, String entityId, String fileName) {

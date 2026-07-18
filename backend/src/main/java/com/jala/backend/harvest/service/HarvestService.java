@@ -13,7 +13,9 @@ public interface HarvestService {
             CreateHarvestRequest request);
 
     List<HarvestResponse> getHarvests(
-            UUID pondCycleId);
+            UUID pondCycleId,
+            Integer page,
+            Integer size);
 
     HarvestResponse cancelHarvest(
             UUID harvestId,

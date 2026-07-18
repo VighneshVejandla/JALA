@@ -3,6 +3,7 @@ package com.jala.backend.medicinephoto.service;
 import com.jala.backend.common.exception.BadRequestException;
 import com.jala.backend.common.exception.ResourceNotFoundException;
 import com.jala.backend.common.util.DateTimeUtil;
+import com.jala.backend.common.util.PageRequestUtil;
 import com.jala.backend.medicine.entity.MedicineEntry;
 import com.jala.backend.medicine.enums.MedicineStatus;
 import com.jala.backend.medicine.repository.MedicineRepository;
@@ -11,20 +12,19 @@ import com.jala.backend.medicinephoto.dto.response.MedicinePhotoResponse;
 import com.jala.backend.medicinephoto.entity.MedicinePhoto;
 import com.jala.backend.medicinephoto.mapper.MedicinePhotoMapper;
 import com.jala.backend.medicinephoto.repository.MedicinePhotoRepository;
+import com.jala.backend.security.service.CurrentUserService;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import com.jala.backend.storage.enums.StorageFolder;
 import com.jala.backend.storage.enums.StorageModule;
 import com.jala.backend.storage.service.StorageService;
 import com.jala.backend.storage.util.FileNameGenerator;
+import com.jala.backend.storage.util.FileValidationUtil;
 import com.jala.backend.user.entity.User;
-import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +38,9 @@ public class MedicinePhotoServiceImpl
 
     private final MedicineRepository medicineRepository;
 
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+
+    private final SiteAccessService siteAccessService;
 
     private final MedicinePhotoMapper mapper;
 
@@ -52,20 +54,16 @@ public class MedicinePhotoServiceImpl
         MedicineEntry medicine =
                 getMedicineOrThrow(request.getMedicineEntryId());
 
+        siteAccessService.checkPondCycleAccess(
+                medicine.getPondCycle().getId());
+
         if (medicine.getStatus() == MedicineStatus.CANCELLED) {
 
             throw new BadRequestException(
                     "Cannot upload photos to a cancelled medicine entry.");
         }
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+        User user = currentUserService.getCurrentUser();
 
         var pondCycle = medicine.getPondCycle();
 
@@ -78,8 +76,11 @@ public class MedicinePhotoServiceImpl
                         medicine.getId()) + 1;
 
         String extension =
-                getExtension(
+                FileValidationUtil.extractExtension(
                         request.getFile().getOriginalFilename());
+
+        FileValidationUtil.requireImageContent(
+                request.getFile());
 
         String fileName =
                 FileNameGenerator.generateEntityFileName(
@@ -134,11 +135,20 @@ public class MedicinePhotoServiceImpl
     @Override
     @Transactional(readOnly = true)
     public List<MedicinePhotoResponse> getPhotos(
-            UUID medicineEntryId) {
+            UUID medicineEntryId,
+            Integer page,
+            Integer size) {
+
+        MedicineEntry medicine =
+                getMedicineOrThrow(medicineEntryId);
+
+        siteAccessService.checkPondCycleAccess(
+                medicine.getPondCycle().getId());
 
         return repository
                 .findByMedicineEntryIdOrderByUploadedAt(
-                        medicineEntryId)
+                        medicineEntryId,
+                        PageRequestUtil.of(page, size))
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -151,17 +161,5 @@ public class MedicinePhotoServiceImpl
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Medicine entry not found."));
-    }
-
-    private String getExtension(
-            String fileName) {
-
-        int index = fileName.lastIndexOf('.');
-
-        if (index == -1) {
-            return "jpg";
-        }
-
-        return fileName.substring(index + 1);
     }
 }

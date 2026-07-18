@@ -4,6 +4,7 @@ import com.jala.backend.common.constants.ApiConstants;
 import com.jala.backend.storage.dto.FileUploadResponse;
 import com.jala.backend.storage.enums.StorageFolder;
 import com.jala.backend.storage.service.StorageService;
+import com.jala.backend.storage.util.FileValidationUtil;
 import com.jala.backend.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping(ApiConstants.STORAGE_BASE_URL)
@@ -30,16 +33,24 @@ public class StorageController {
             @RequestParam("folder") StorageFolder folder,
             @RequestParam("entityId") String entityId) {
 
+        // Never trust the client-supplied file name: validate its extension
+        // and generate the stored name server-side.
+        String extension =
+                FileValidationUtil.extractExtension(
+                        file.getOriginalFilename());
+
+        String fileName = UUID.randomUUID() + "." + extension;
+
         String fileUrl =
                 storageService.upload(
                         file,
                         folder,
                         entityId,
-                        file.getOriginalFilename()
+                        fileName
                 );
 
         FileUploadResponse response = FileUploadResponse.builder()
-                .fileName(file.getOriginalFilename())
+                .fileName(fileName)
                 .fileUrl(fileUrl)
                 .build();
 

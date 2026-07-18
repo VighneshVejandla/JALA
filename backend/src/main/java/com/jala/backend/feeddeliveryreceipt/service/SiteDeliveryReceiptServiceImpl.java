@@ -11,20 +11,19 @@ import com.jala.backend.feeddeliveryreceipt.dto.response.SiteDeliveryReceiptResp
 import com.jala.backend.feeddeliveryreceipt.entity.SiteDeliveryReceipt;
 import com.jala.backend.feeddeliveryreceipt.mapper.SiteDeliveryReceiptMapper;
 import com.jala.backend.feeddeliveryreceipt.repository.SiteDeliveryReceiptRepository;
+import com.jala.backend.security.service.CurrentUserService;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import com.jala.backend.storage.enums.StorageFolder;
 import com.jala.backend.storage.enums.StorageModule;
 import com.jala.backend.storage.service.StorageService;
 import com.jala.backend.storage.util.FileNameGenerator;
+import com.jala.backend.storage.util.FileValidationUtil;
 import com.jala.backend.user.entity.User;
-import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +39,9 @@ public class SiteDeliveryReceiptServiceImpl
 
     private final SiteDeliveryReceiptMapper mapper;
 
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+
+    private final SiteAccessService siteAccessService;
 
     private final StorageService storageService;
 
@@ -49,28 +50,20 @@ public class SiteDeliveryReceiptServiceImpl
     public SiteDeliveryReceiptResponse uploadReceipt(
             CreateSiteDeliveryReceiptRequest request) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+        User user = currentUserService.getCurrentUser();
 
         SiteDelivery siteDelivery =
-                siteDeliveryRepository
-                        .findById(request.getSiteDeliveryId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Site delivery not found."));
-        var site = siteDelivery.getSite();
-        String originalFileName = request.getFile().getOriginalFilename();
+                getSiteDeliveryOrThrow(request.getSiteDeliveryId());
 
-        assert originalFileName != null;
-        String extension = originalFileName.substring(
-                originalFileName.lastIndexOf('.') + 1
-        );
+        var site = siteDelivery.getSite();
+
+        siteAccessService.checkSiteAccess(site.getId());
+
+        String extension =
+                FileValidationUtil.extractExtension(
+                        request.getFile().getOriginalFilename());
+
+        FileValidationUtil.requireImageContent(request.getFile());
 
         long sequence =
                 repository.countBySiteDeliveryIdAndStatus(
@@ -126,6 +119,12 @@ public class SiteDeliveryReceiptServiceImpl
     public List<SiteDeliveryReceiptResponse> getReceipts(
             UUID siteDeliveryId) {
 
+        SiteDelivery siteDelivery =
+                getSiteDeliveryOrThrow(siteDeliveryId);
+
+        siteAccessService.checkSiteAccess(
+                siteDelivery.getSite().getId());
+
         return repository
                 .findBySiteDeliveryIdAndStatusOrderByUploadedAtAsc(
                         siteDeliveryId,
@@ -141,17 +140,13 @@ public class SiteDeliveryReceiptServiceImpl
             UUID receiptId,
             CancelSiteDeliveryReceiptRequest request) {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        User user = userRepository
-                .findByEmployeeCode(authentication.getName())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found."));
+        User user = currentUserService.getCurrentUser();
 
         SiteDeliveryReceipt receipt =
                 getReceiptOrThrow(receiptId);
+
+        siteAccessService.checkSiteAccess(
+                receipt.getSiteDelivery().getSite().getId());
 
         receipt.setStatus(
                 FeedDeliveryStatus.CANCELLED);
@@ -177,6 +172,9 @@ public class SiteDeliveryReceiptServiceImpl
         SiteDeliveryReceipt receipt =
                 getReceiptOrThrow(receiptId);
 
+        siteAccessService.checkSiteAccess(
+                receipt.getSiteDelivery().getSite().getId());
+
         receipt.setStatus(
                 FeedDeliveryStatus.ACTIVE);
 
@@ -187,6 +185,15 @@ public class SiteDeliveryReceiptServiceImpl
 
         log.info("Receipt {} restored.",
                 receipt.getId());
+    }
+
+    private SiteDelivery getSiteDeliveryOrThrow(
+            UUID id) {
+
+        return siteDeliveryRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Site delivery not found."));
     }
 
     private SiteDeliveryReceipt getReceiptOrThrow(

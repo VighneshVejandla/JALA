@@ -9,6 +9,7 @@ import com.jala.backend.user.dto.response.UserResponse;
 import com.jala.backend.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class UserController {
 
         UserResponse response = userService.createUser(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<UserResponse>builder()
                         .success(true)
                         .message("User created successfully")
@@ -74,7 +75,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> patchUser(
             @PathVariable UUID id,
-            @RequestBody UpdateUserRequest request) {
+            @Valid @RequestBody UpdateUserRequest request) {
 
         UserResponse response = userService.patchUser(id, request);
 
@@ -113,6 +114,54 @@ public class UserController {
                 ApiResponse.<Void>builder()
                         .success(true)
                         .message("User deactivated successfully")
+                        .build()
+        );
+    }
+
+    @PostMapping("/{id}/sites/{siteId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> assignSite(
+            @PathVariable UUID id,
+            @PathVariable UUID siteId) {
+
+        userService.assignSite(id, siteId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Site assigned successfully")
+                        .build()
+        );
+    }
+
+    @DeleteMapping("/{id}/sites/{siteId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> unassignSite(
+            @PathVariable UUID id,
+            @PathVariable UUID siteId) {
+
+        userService.unassignSite(id, siteId);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Site unassigned successfully")
+                        .build()
+        );
+    }
+
+    @GetMapping("/{id}/sites")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<UUID>>> getAssignedSites(
+            @PathVariable UUID id) {
+
+        List<UUID> siteIds = userService.getAssignedSiteIds(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<UUID>>builder()
+                        .success(true)
+                        .message("Assigned sites fetched successfully")
+                        .data(siteIds)
                         .build()
         );
     }

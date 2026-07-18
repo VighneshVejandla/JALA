@@ -11,6 +11,7 @@ import com.jala.backend.site.dto.response.SiteResponse;
 import com.jala.backend.site.entity.Site;
 import com.jala.backend.site.mapper.SiteMapper;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class SiteServiceImpl implements SiteService {
     private final SiteRepository siteRepository;
     private final SiteMapper siteMapper;
     private final FeedInventoryRepository feedInventoryRepository;
+    private final SiteAccessService siteAccessService;
 
     @Override
     @Transactional
@@ -42,6 +44,8 @@ public class SiteServiceImpl implements SiteService {
         Site site = siteMapper.toEntity(request);
 
         Site savedSite = siteRepository.save(site);
+
+        siteAccessService.checkSiteAccess(savedSite.getId());
 
         FeedInventory inventory = FeedInventory.builder()
                 .site(savedSite)
@@ -62,7 +66,17 @@ public class SiteServiceImpl implements SiteService {
     @Transactional(readOnly = true)
     public List<SiteResponse> getAllSites() {
 
-        return siteRepository.findAll()
+        List<UUID> accessibleSiteIds = siteAccessService.accessibleSiteIds();
+
+        if (accessibleSiteIds != null && accessibleSiteIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Site> sites = accessibleSiteIds == null
+                ? siteRepository.findAll()
+                : siteRepository.findByIdIn(accessibleSiteIds);
+
+        return sites
                 .stream()
                 .map(siteMapper::toResponse)
                 .toList();
@@ -72,6 +86,8 @@ public class SiteServiceImpl implements SiteService {
     @Transactional(readOnly = true)
     public SiteResponse getSiteById(UUID id) {
 
+        siteAccessService.checkSiteAccess(id);
+
         Site site = getSiteOrThrow(id);
 
         return siteMapper.toResponse(site);
@@ -80,6 +96,8 @@ public class SiteServiceImpl implements SiteService {
     @Override
     @Transactional
     public SiteResponse patchSite(UUID id, UpdateSiteRequest request) {
+
+        siteAccessService.checkSiteAccess(id);
 
         Site site = getSiteOrThrow(id);
 
@@ -123,6 +141,8 @@ public class SiteServiceImpl implements SiteService {
     @Transactional
     public void activateSite(UUID id) {
 
+        siteAccessService.checkSiteAccess(id);
+
         Site site = getSiteOrThrow(id);
 
         site.setIsActive(true);
@@ -135,6 +155,8 @@ public class SiteServiceImpl implements SiteService {
     @Override
     @Transactional
     public void deactivateSite(UUID id) {
+
+        siteAccessService.checkSiteAccess(id);
 
         Site site = getSiteOrThrow(id);
 

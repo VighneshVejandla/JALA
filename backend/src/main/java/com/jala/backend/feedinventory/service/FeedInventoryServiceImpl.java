@@ -9,6 +9,7 @@ import com.jala.backend.feedinventory.mapper.FeedInventoryMapper;
 import com.jala.backend.feedinventory.repository.FeedInventoryRepository;
 import com.jala.backend.notification.service.NotificationService;
 import com.jala.backend.site.repository.SiteRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,8 @@ public class FeedInventoryServiceImpl
 
     private final FeedInventoryMapper mapper;
 
+    private final SiteAccessService siteAccessService;
+
     private static final BigDecimal LOW_STOCK_THRESHOLD =
             BigDecimal.valueOf(150);
 
@@ -40,6 +43,8 @@ public class FeedInventoryServiceImpl
     @Override
     @Transactional(readOnly = true)
     public FeedInventoryResponse getInventoryBySite(UUID siteId) {
+
+        siteAccessService.checkSiteAccess(siteId);
 
         FeedInventory inventory = repository.findBySiteId(siteId)
                 .orElseThrow(() ->
@@ -52,7 +57,17 @@ public class FeedInventoryServiceImpl
     @Transactional(readOnly = true)
     public List<FeedInventoryResponse> getAllInventories() {
 
-        return repository.findAllByOrderBySiteSiteCode()
+        List<UUID> accessibleSiteIds = siteAccessService.accessibleSiteIds();
+
+        if (accessibleSiteIds != null && accessibleSiteIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<FeedInventory> inventories = accessibleSiteIds == null
+                ? repository.findAllByOrderBySiteSiteCode()
+                : repository.findBySiteIdInOrderBySiteSiteCode(accessibleSiteIds);
+
+        return inventories
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -63,6 +78,8 @@ public class FeedInventoryServiceImpl
     public void increaseInventory(
             UUID siteId,
             BigDecimal quantityKg) {
+
+        siteAccessService.checkSiteAccess(siteId);
 
         FeedInventory inventory = repository
                 .findBySiteId(siteId)
@@ -89,6 +106,8 @@ public class FeedInventoryServiceImpl
     public void decreaseInventory(
             UUID siteId,
             BigDecimal quantityKg) {
+
+        siteAccessService.checkSiteAccess(siteId);
 
         FeedInventory inventory = repository
                 .findBySiteId(siteId)
@@ -123,10 +142,6 @@ public class FeedInventoryServiceImpl
                     inventory.getAvailableKg(),
                     LOW_STOCK_THRESHOLD);
         }
-
-
-
-        repository.save(inventory);
     }
 
 }

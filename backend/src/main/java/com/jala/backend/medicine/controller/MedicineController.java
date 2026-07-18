@@ -9,6 +9,7 @@ import com.jala.backend.medicine.dto.response.MedicineResponse;
 import com.jala.backend.medicine.service.MedicineService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class MedicineController {
         MedicineResponse response =
                 service.createMedicine(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<MedicineResponse>builder()
                         .success(true)
                         .message("Medicine entry created successfully")
@@ -43,10 +44,12 @@ public class MedicineController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<MedicineResponse>>> getMedicines(
-            @RequestParam UUID pondCycleId) {
+            @RequestParam UUID pondCycleId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         List<MedicineResponse> response =
-                service.getMedicines(pondCycleId);
+                service.getMedicines(pondCycleId, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<MedicineResponse>>builder()
@@ -61,7 +64,7 @@ public class MedicineController {
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<MedicineResponse>> updateMedicine(
             @PathVariable UUID id,
-            @RequestBody UpdateMedicineRequest request) {
+            @Valid @RequestBody UpdateMedicineRequest request) {
 
         MedicineResponse response =
                 service.updateMedicine(id, request);
@@ -79,7 +82,7 @@ public class MedicineController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> cancelMedicine(
             @PathVariable UUID id,
-            @RequestBody CancelMedicineRequest request) {
+            @Valid @RequestBody CancelMedicineRequest request) {
 
         service.cancelMedicine(id, request.getReason());
 

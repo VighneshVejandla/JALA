@@ -11,3 +11,10 @@ target/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Environment / secrets — never commit
+.env
+.env.*
+!.env.example
+*.env
+.env.properties

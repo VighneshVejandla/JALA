@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProperties jwtProperties;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final LoginAttemptService loginAttemptService;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,15 +41,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
 
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getEmployeeCode(),
-                                request.getPassword()
-                        )
-                );
+        loginAttemptService.checkNotLocked(request.getEmployeeCode());
+
+        Authentication authentication;
+
+        try {
+            authentication =
+                    authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(
+                                    request.getEmployeeCode(),
+                                    request.getPassword()
+                            )
+                    );
+        } catch (AuthenticationException e) {
+            loginAttemptService.recordFailure(request.getEmployeeCode());
+            throw e;
+        }
+
+        loginAttemptService.reset(request.getEmployeeCode());
 
         CustomUserDetails user =
                 (CustomUserDetails) authentication.getPrincipal();

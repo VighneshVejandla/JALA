@@ -1,0 +1,41 @@
+# Local development stack: Postgres + the backend.
+# Usage: docker compose up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: jala
+      POSTGRES_USER: jala
+      POSTGRES_PASSWORD: jala
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jala -d jala"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: jala
+      DB_USERNAME: jala
+      DB_PASSWORD: jala
+      JWT_SECRET: local-dev-secret-change-me-0123456789abcdef
+      JWT_EXPIRATION: "3600000"
+      SUPABASE_URL: ${SUPABASE_URL:-http://localhost:54321}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-dev-key}
+      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-dev-bucket}
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

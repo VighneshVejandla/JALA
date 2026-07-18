@@ -14,7 +14,9 @@ public interface NotificationService {
             Integer sessionNumber,
             String quantity);
 
-    NotificationSummaryResponse getNotifications();
+    NotificationSummaryResponse getNotifications(
+            Integer page,
+            Integer size);
 
     void markAsRead(
             UUID notificationId);

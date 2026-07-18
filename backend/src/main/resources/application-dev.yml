@@ -1,4 +1,4 @@
-#D:\JALA\backend\src\main\resources\application-dev.yml
+#  D:\JALA\backend\src\main\resources\application-dev.yml
 
 spring:
 
@@ -14,8 +14,6 @@ spring:
 
     show-sql: true
 
-    open-in-view: false
-
     properties:
       hibernate:
         format_sql: true
@@ -28,11 +26,4 @@ spring:
 logging:
   level:
     org.hibernate.SQL: DEBUG
-    root: INFO
-
-test:
-    jwt: ${JWT_EXPIRATION:NOT_FOUND}
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
+    org.springframework.security: DEBUG

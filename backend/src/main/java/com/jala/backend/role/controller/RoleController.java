@@ -4,6 +4,7 @@ import com.jala.backend.common.constants.ApiConstants;
 import com.jala.backend.role.dto.RoleResponse;
 import com.jala.backend.role.service.RoleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,11 +18,13 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<RoleResponse> getAllRoles() {
         return roleService.getAllRoles();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public RoleResponse getRoleById(@PathVariable UUID id) {
         return roleService.getRoleById(id);
     }

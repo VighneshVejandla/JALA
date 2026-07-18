@@ -11,6 +11,7 @@ import com.jala.backend.pondcycle.entity.PondCycle;
 import com.jala.backend.pondcycle.enums.PondCycleStatus;
 import com.jala.backend.pondcycle.mapper.PondCycleMapper;
 import com.jala.backend.pondcycle.repository.PondCycleRepository;
+import com.jala.backend.siteaccess.service.SiteAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,13 @@ public class PondCycleServiceImpl implements PondCycleService {
     private final PondCycleRepository pondCycleRepository;
     private final PondRepository pondRepository;
     private final PondCycleMapper pondCycleMapper;
+    private final SiteAccessService siteAccessService;
 
     @Override
     @Transactional
     public PondCycleResponse createCycle(CreatePondCycleRequest request) {
+
+        siteAccessService.checkPondAccess(request.getPondId());
 
         log.info("Creating pond cycle for pond {}", request.getPondId());
 
@@ -71,6 +75,8 @@ public class PondCycleServiceImpl implements PondCycleService {
     @Transactional(readOnly = true)
     public List<PondCycleResponse> getCyclesByPond(UUID pondId) {
 
+        siteAccessService.checkPondAccess(pondId);
+
         return pondCycleRepository
                 .findByPondIdOrderByCycleNumberDesc(pondId)
                 .stream()
@@ -81,6 +87,8 @@ public class PondCycleServiceImpl implements PondCycleService {
     @Override
     @Transactional(readOnly = true)
     public PondCycleResponse getActiveCycle(UUID pondId) {
+
+        siteAccessService.checkPondAccess(pondId);
 
         PondCycle cycle = pondCycleRepository
                 .findByPondIdAndStatus(
@@ -100,6 +108,8 @@ public class PondCycleServiceImpl implements PondCycleService {
             UpdatePondCycleRequest request) {
 
         PondCycle cycle = getCycleOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(cycle.getId());
 
         if (cycle.getStatus() == PondCycleStatus.HARVESTED) {
 
@@ -132,6 +142,8 @@ public class PondCycleServiceImpl implements PondCycleService {
 
         PondCycle cycle = getCycleOrThrow(id);
 
+        siteAccessService.checkPondCycleAccess(cycle.getId());
+
         if (cycle.getStatus() == PondCycleStatus.HARVESTED) {
 
             throw new BadRequestException(
@@ -150,6 +162,8 @@ public class PondCycleServiceImpl implements PondCycleService {
     public void undoHarvest(UUID id) {
 
         PondCycle cycle = getCycleOrThrow(id);
+
+        siteAccessService.checkPondCycleAccess(cycle.getId());
 
         if (cycle.getStatus() != PondCycleStatus.HARVESTED) {
             throw new BadRequestException(

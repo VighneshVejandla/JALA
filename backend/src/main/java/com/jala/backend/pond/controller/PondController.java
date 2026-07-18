@@ -8,6 +8,7 @@ import com.jala.backend.pond.dto.response.PondResponse;
 import com.jala.backend.pond.service.PondService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class PondController {
 
         PondResponse response = pondService.createPond(request);
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<PondResponse>builder()
                         .success(true)
                         .message("Pond created successfully")
@@ -89,7 +90,7 @@ public class PondController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PondResponse>> patchPond(
             @PathVariable UUID id,
-            @RequestBody UpdatePondRequest request) {
+            @Valid @RequestBody UpdatePondRequest request) {
 
         PondResponse response = pondService.patchPond(id, request);
 

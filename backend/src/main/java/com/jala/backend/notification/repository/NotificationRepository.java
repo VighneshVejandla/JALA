@@ -3,21 +3,30 @@ package com.jala.backend.notification.repository;
 import com.jala.backend.notification.entity.Notification;
 import com.jala.backend.notification.enums.NotificationStatus;
 import com.jala.backend.notification.enums.NotificationType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 public interface NotificationRepository
         extends JpaRepository<Notification, UUID> {
 
-    List<Notification> findAllByOrderByCreatedAtDesc();
+    List<Notification> findAllByOrderByCreatedAtDesc(
+            Pageable pageable);
 
-    List<Notification> findByStatusOrderByCreatedAtDesc(
-            NotificationStatus status);
+    /** Site-scoped variant for restricted roles. */
+    List<Notification> findBySiteIdInOrderByCreatedAtDesc(
+            Collection<UUID> siteIds,
+            Pageable pageable);
 
     long countByStatus(
+            NotificationStatus status);
+
+    long countBySiteIdInAndStatus(
+            Collection<UUID> siteIds,
             NotificationStatus status);
 
     boolean existsByTypeAndSiteIdAndStatus(
@@ -37,5 +46,6 @@ public interface NotificationRepository
         ORDER BY n.createdAt DESC
         """)
     List<Notification> search(
-            String keyword);
+            String keyword,
+            Pageable pageable);
 }
