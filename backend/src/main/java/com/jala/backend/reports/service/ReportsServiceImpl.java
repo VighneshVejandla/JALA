@@ -60,9 +60,11 @@ public class ReportsServiceImpl
 
     // Self-reference (proxy) so getDashboard's calls to the other report
     // methods go through the transactional proxy. @Lazy breaks the
-    // constructor cycle.
+    // constructor cycle; field injection is required here because
+    // constructor-injecting the bean into itself is a circular dependency.
     @Lazy
     @Autowired
+    @SuppressWarnings("java:S6813")
     private ReportsService self;
 
 
