@@ -115,7 +115,18 @@ public class StorageServiceImpl implements StorageService {
     }
 
     private String buildObjectPath(StorageFolder folder, String entityId, String fileName) {
-        return folder.getFolder() + "/" + entityId + "/" + fileName;
+        // Segments are already validated (no "/", "\\" or ".."), but encode
+        // them as defense-in-depth so nothing from the client can alter the
+        // structure of the storage URL path.
+        return folder.getFolder()
+                + "/" + encodeSegment(entityId)
+                + "/" + encodeSegment(fileName);
+    }
+
+    private static String encodeSegment(String segment) {
+        return java.net.URLEncoder
+                .encode(segment, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20");
     }
 
     private String buildUploadUrl(String objectPath) {

@@ -9,7 +9,6 @@ import com.jala.backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +30,9 @@ public class SiteAccessService {
     private final PondRepository pondRepository;
     private final PondCycleRepository pondCycleRepository;
 
-    @Transactional(readOnly = true)
+    // These checks issue single read queries and are always invoked from
+    // within a caller's transaction; no separate @Transactional is needed
+    // (and it avoids Spring self-invocation of a proxied method).
     public void checkSiteAccess(UUID siteId) {
 
         if (currentUserService.isUnrestricted()) {
@@ -45,7 +46,6 @@ public class SiteAccessService {
         }
     }
 
-    @Transactional(readOnly = true)
     public void checkPondAccess(UUID pondId) {
 
         if (currentUserService.isUnrestricted()) {
@@ -59,7 +59,6 @@ public class SiteAccessService {
         checkSiteAccess(siteId);
     }
 
-    @Transactional(readOnly = true)
     public void checkPondCycleAccess(UUID pondCycleId) {
 
         if (currentUserService.isUnrestricted()) {
@@ -75,9 +74,11 @@ public class SiteAccessService {
 
     /**
      * Site ids the current user may read, or {@code null} for
-     * unrestricted roles (meaning: no filter).
+     * unrestricted roles. {@code null} is a deliberate sentinel meaning
+     * "no filter — see everything", which callers treat differently from
+     * an empty list ("assigned to no sites"); hence not an empty list.
      */
-    @Transactional(readOnly = true)
+    @SuppressWarnings("java:S1168")
     public List<UUID> accessibleSiteIds() {
 
         if (currentUserService.isUnrestricted()) {

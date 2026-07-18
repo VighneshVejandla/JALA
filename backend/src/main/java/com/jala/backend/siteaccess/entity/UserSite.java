@@ -23,6 +23,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@SuppressWarnings("java:S2160") // equality is id-based in BaseEntity (intentional for JPA)
 public class UserSite extends BaseEntity {
 
     @Column(name = "user_id", nullable = false)

@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@SuppressWarnings("java:S2160") // equality is id-based in BaseEntity (intentional for JPA)
 public class Site extends BaseEntity {
 
     @Column(name = "site_code", nullable = false, unique = true, length = 20)

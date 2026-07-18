@@ -22,7 +22,7 @@ public final class PageRequestUtil {
 
         int resolvedSize = size == null
                 ? MAX_PAGE_SIZE
-                : Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+                : Math.clamp(size, 1, MAX_PAGE_SIZE);
 
         return PageRequest.of(resolvedPage, resolvedSize);
     }
