@@ -36,8 +36,9 @@ jobs:
           cache: maven
 
       # Unit tests + web slices (Surefire), then integration tests on
-      # Testcontainers Postgres (Failsafe), then the JaCoCo >=90% line
-      # coverage gate. No external DB or secrets required.
+      # Testcontainers Postgres (Failsafe), then the JaCoCo line-coverage
+      # gate (0.70 ratchet floor; see backend/pom.xml). No external DB or
+      # secrets required.
       - name: Test & Verify
         run: ./mvnw -B verify
 

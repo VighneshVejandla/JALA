@@ -82,7 +82,15 @@ class FileValidationUtilTest {
             assertThatThrownBy(() ->
                     FileValidationUtil.extractExtension(null))
                     .isInstanceOf(FileStorageException.class)
-                    .hasMessage("Invalid file or path segment");
+                    .hasMessage("File name is required");
+        }
+
+        @Test
+        void throwsForBlankFileName() {
+            assertThatThrownBy(() ->
+                    FileValidationUtil.extractExtension("  "))
+                    .isInstanceOf(FileStorageException.class)
+                    .hasMessage("File name is required");
         }
     }
 

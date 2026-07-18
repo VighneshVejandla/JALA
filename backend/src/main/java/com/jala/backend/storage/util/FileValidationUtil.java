@@ -39,6 +39,12 @@ public final class FileValidationUtil {
      */
     public static String extractExtension(String fileName) {
 
+        // A missing filename is a distinct, clearer client error than a
+        // path-traversal rejection.
+        if (fileName == null || fileName.isBlank()) {
+            throw new FileStorageException("File name is required");
+        }
+
         rejectPathTraversal(fileName);
 
         int dotIndex = fileName.lastIndexOf('.');

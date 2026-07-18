@@ -53,8 +53,9 @@ cp .env.example .env.properties   # fill in values
 Swagger UI: `http://localhost:8080/swagger-ui` · Health: `/actuator/health`.
 
 Environment variables are documented in [backend/.env.example](backend/.env.example).
-The active profile (`dev`/`prod`) must be set explicitly via
-`SPRING_PROFILES_ACTIVE` — there is deliberately no default.
+`application.yml` defaults the active profile to `dev` for local convenience;
+**production deployments must set `SPRING_PROFILES_ACTIVE=prod`** explicitly
+(otherwise the app boots with dev settings).
 
 ## Tests
 
