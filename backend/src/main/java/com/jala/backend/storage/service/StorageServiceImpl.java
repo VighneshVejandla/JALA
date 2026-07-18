@@ -114,7 +114,8 @@ public class StorageServiceImpl implements StorageService {
         FileValidationUtil.requireImageContent(file);
     }
 
-    private String buildObjectPath(StorageFolder folder, String entityId, String fileName) {
+    // Package-private for direct unit testing of the path-encoding logic.
+    String buildObjectPath(StorageFolder folder, String entityId, String fileName) {
         // Segments are already validated (no "/", "\\" or ".."), but encode
         // them as defense-in-depth so nothing from the client can alter the
         // structure of the storage URL path.
