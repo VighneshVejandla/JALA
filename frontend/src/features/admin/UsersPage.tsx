@@ -1,5 +1,15 @@
-import { UserRound } from 'lucide-react';
-import { useUsers } from '@/api/queries';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Plus, UserRound } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  useCreateUser,
+  useRoles,
+  useSetUserActive,
+  useUsers,
+} from '@/api/queries';
 import { ROLE_LABELS } from '@/auth/roles';
 import {
   EmptyBlock,
@@ -8,52 +18,268 @@ import {
 } from '@/components/common/StateViews';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 import {
-  Avatar,
-  AvatarFallback,
-} from '@/components/ui/avatar';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const schema = z.object({
+  fullName: z.string().min(1, 'Name is required'),
+  employeeCode: z.string().min(1, 'Employee code is required'),
+  roleId: z.string().min(1, 'Role is required'),
+  email: z.string().email('Invalid email').or(z.literal('')).optional(),
+  phone: z.string().optional(),
+  password: z
+    .string()
+    .min(12, 'At least 12 characters')
+    .regex(/[A-Za-z]/, 'Must contain a letter')
+    .regex(/\d/, 'Must contain a digit'),
+});
+type FormValues = z.infer<typeof schema>;
+
+function AddUserDialog() {
+  const [open, setOpen] = useState(false);
+  const roles = useRoles();
+  const createUser = useCreateUser();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      fullName: '',
+      employeeCode: '',
+      roleId: '',
+      email: '',
+      phone: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (v: FormValues) => {
+    try {
+      await createUser.mutateAsync({
+        fullName: v.fullName,
+        employeeCode: v.employeeCode,
+        roleId: v.roleId,
+        email: v.email || undefined,
+        phone: v.phone || undefined,
+        password: v.password,
+      });
+      toast.success('User created');
+      form.reset();
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not create user');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="mr-1 h-4 w-4" /> Add user
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90svh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add user</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Jane Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="employeeCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employee code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="EMP-1024" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="roleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(roles.data ?? []).map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email (optional)</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="jane@jala.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone (optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="9990001111" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Temporary password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="min 12 chars" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createUser.isPending}
+            >
+              {createUser.isPending ? 'Creating…' : 'Create user'}
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function UsersPage() {
   const { data, isLoading, isError, refetch } = useUsers();
-
-  if (isLoading) return <LoadingBlock label="Loading users…" />;
-  if (isError)
-    return <ErrorBlock message="Could not load users." onRetry={() => refetch()} />;
-  if (!data || data.length === 0)
-    return <EmptyBlock icon={<UserRound className="h-6 w-6" />} title="No users" />;
+  const setActive = useSetUserActive();
 
   return (
-    <div className="space-y-3">
-      {data.map((u) => (
-        <Card key={u.id}>
-          <CardContent className="flex items-center gap-3 p-4">
-            <Avatar className="h-10 w-10 border border-border">
-              <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
-                {u.fullName
-                  .split(' ')
-                  .map((p) => p[0])
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{u.fullName}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {u.employeeCode}
-                {u.email && ` · ${u.email}`}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <Badge variant="secondary">{ROLE_LABELS[u.role]}</Badge>
-              {!u.isActive && (
-                <span className="text-xs text-muted-foreground">Inactive</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Users</h2>
+        <AddUserDialog />
+      </div>
+
+      {isLoading && <LoadingBlock label="Loading users…" />}
+      {isError && (
+        <ErrorBlock message="Could not load users." onRetry={() => refetch()} />
+      )}
+      {data && data.length === 0 && (
+        <EmptyBlock icon={<UserRound className="h-6 w-6" />} title="No users" />
+      )}
+
+      <div className="space-y-3">
+        {data?.map((u) => (
+          <Card key={u.id}>
+            <CardContent className="flex items-center gap-3 p-4">
+              <Avatar className="h-10 w-10 border border-border">
+                <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                  {u.fullName
+                    .split(' ')
+                    .map((p) => p[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{u.fullName}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {u.employeeCode}
+                  {u.email && ` · ${u.email}`}
+                </p>
+                <Badge variant="secondary" className="mt-1">
+                  {ROLE_LABELS[u.role]}
+                </Badge>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {u.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <Switch
+                    checked={u.isActive}
+                    disabled={setActive.isPending}
+                    aria-label={u.isActive ? 'Deactivate user' : 'Activate user'}
+                    onCheckedChange={(next) =>
+                      setActive.mutate(
+                        { id: u.id, active: next },
+                        {
+                          onError: (e) =>
+                            toast.error(
+                              e instanceof Error ? e.message : 'Update failed',
+                            ),
+                        },
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

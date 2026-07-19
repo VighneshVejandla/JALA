@@ -33,7 +33,7 @@ describe('login flow', () => {
     const user = userEvent.setup();
 
     await user.type(await screen.findByLabelText(/employee code/i), 'EMP-WORK');
-    await user.type(screen.getByLabelText(/password/i), 'secret');
+    await user.type(screen.getByLabelText('Password'), 'secret');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     expect(await screen.findByText("Today's Feed")).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('login flow', () => {
     const user = userEvent.setup();
 
     await user.type(await screen.findByLabelText(/employee code/i), 'BAD');
-    await user.type(screen.getByLabelText(/password/i), 'x');
+    await user.type(screen.getByLabelText('Password'), 'x');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     expect(
@@ -71,7 +71,7 @@ describe('login flow', () => {
     renderWithProviders(<AppRoutes />, { route: '/app/ponds' });
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText(/employee code/i), 'EMP-WORK');
-    await user.type(screen.getByLabelText(/password/i), 'secret');
+    await user.type(screen.getByLabelText('Password'), 'secret');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
     expect(await screen.findByText('Pond One')).toBeInTheDocument();
   });

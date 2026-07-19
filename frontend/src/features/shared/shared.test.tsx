@@ -37,7 +37,11 @@ describe('AlertsPage', () => {
 
   it('shows an empty state', async () => {
     asWorker();
-    server.use(http.get(`${BASE}/notifications`, () => ok([])));
+    server.use(
+      http.get(`${BASE}/notifications`, () =>
+        ok({ unreadCount: 0, notifications: [] }),
+      ),
+    );
     renderWithProviders(<AppRoutes />, { route: '/app/alerts', authed: true });
     expect(await screen.findByText('No alerts')).toBeInTheDocument();
   });

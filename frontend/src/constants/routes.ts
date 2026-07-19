@@ -21,7 +21,11 @@ export const ROUTES = {
   // Admin experience
   admin: '/admin',
   adminSites: '/admin/sites',
+  adminSiteDetail: (siteId: string) => `/admin/sites/${siteId}`,
+  adminPondManage: (pondId: string) => `/admin/ponds/${pondId}`,
   adminUsers: '/admin/users',
+  adminHarvested: '/admin/harvested',
+  adminHistory: '/admin/history',
   adminAlerts: '/admin/alerts',
   adminProfile: '/admin/profile',
 } as const;

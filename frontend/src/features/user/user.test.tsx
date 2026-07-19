@@ -63,6 +63,19 @@ describe('PondsPage', () => {
     renderWithProviders(<AppRoutes />, { route: '/app/ponds', authed: true });
     expect(await screen.findByText('No ponds')).toBeInTheDocument();
   });
+
+  it('ignores non-Enter keys on a pond card', async () => {
+    asWorker();
+    renderWithProviders(<AppRoutes />, { route: '/app/ponds', authed: true });
+    const user = userEvent.setup();
+    const card = (await screen.findByText('Pond One')).closest(
+      '[role="button"]',
+    ) as HTMLElement;
+    card.focus();
+    await user.keyboard('a');
+    // no navigation to detail — the list is still shown
+    expect(screen.getByText('Pond One')).toBeInTheDocument();
+  });
 });
 
 describe('PondDetailPage', () => {

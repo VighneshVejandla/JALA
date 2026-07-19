@@ -18,9 +18,7 @@ export function AlertsPage() {
   if (isError)
     return <ErrorBlock message="Could not load alerts." onRetry={() => refetch()} />;
 
-    console.log("Notifications:", data);
-
-    const notifications = data?.notifications ?? [];
+  const notifications = data?.notifications ?? [];
 
   if (notifications.length === 0)
     return (

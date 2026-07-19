@@ -122,8 +122,8 @@ export function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
+                    <div className="relative">
+                      <FormControl>
                         <Input
                           type={showPassword ? 'text' : 'password'}
                           placeholder="••••••••"
@@ -131,20 +131,20 @@ export function LoginPage() {
                           className="pr-10"
                           {...field}
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

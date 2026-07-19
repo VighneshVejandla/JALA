@@ -20,6 +20,7 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/components/ui/**',
+        'src/constants/**',
         'src/hooks/use-mobile.tsx',
         'src/hooks/use-toast.ts',
         'src/main.tsx',

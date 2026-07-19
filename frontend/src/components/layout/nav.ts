@@ -1,5 +1,7 @@
 import {
   Bell,
+  Fish,
+  History,
   Home,
   LayoutDashboard,
   MapPin,
@@ -34,6 +36,8 @@ export const NAV_BY_EXPERIENCE: Record<Experience, NavItem[]> = {
   admin: [
     { to: ROUTES.admin, label: 'Dashboard', icon: LayoutDashboard, end: true },
     { to: ROUTES.adminSites, label: 'Sites', icon: MapPin },
+    { to: ROUTES.adminHarvested, label: 'Harvest', icon: Fish },
+    { to: ROUTES.adminHistory, label: 'History', icon: History },
     { to: ROUTES.adminUsers, label: 'Users', icon: Users },
     { to: ROUTES.adminAlerts, label: 'Alerts', icon: Bell },
     { to: ROUTES.adminProfile, label: 'Profile', icon: User },

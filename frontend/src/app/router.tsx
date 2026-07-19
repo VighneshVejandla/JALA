@@ -15,7 +15,11 @@ import { DriverDeliveries } from '@/features/driver/DriverDeliveries';
 // Admin experience
 import { AdminDashboard } from '@/features/admin/AdminDashboard';
 import { SitesPage } from '@/features/admin/SitesPage';
+import { SiteDetail } from '@/features/admin/SiteDetail';
+import { PondManage } from '@/features/admin/pond/PondManage';
 import { UsersPage } from '@/features/admin/UsersPage';
+import { HistoryPage } from '@/features/admin/HistoryPage';
+import { HarvestedPage } from '@/features/admin/HarvestedPage';
 // Shared
 import { AlertsPage } from '@/features/shared/AlertsPage';
 import { ProfilePage } from '@/features/shared/ProfilePage';
@@ -50,7 +54,11 @@ export function AppRoutes() {
         <Route path={ROUTES.admin} element={<AppShell />}>
           <Route index element={<AdminDashboard />} />
           <Route path="sites" element={<SitesPage />} />
+          <Route path="sites/:siteId" element={<SiteDetail />} />
+          <Route path="ponds/:pondId" element={<PondManage />} />
           <Route path="users" element={<UsersPage />} />
+          <Route path="harvested" element={<HarvestedPage />} />
+          <Route path="history" element={<HistoryPage />} />
           <Route path="alerts" element={<AlertsPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>

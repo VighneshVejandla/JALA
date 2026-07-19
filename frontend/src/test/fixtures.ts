@@ -1,10 +1,20 @@
 import type {
+  FeedAnalyticsResponse,
   FeedDeliveryResponse,
+  FeedEntryResponse,
+  FeedScheduleResponse,
+  HarvestHistoryResponse,
+  HarvestResponse,
   HomeDashboardResponse,
+  InventoryAnalyticsResponse,
   LoginResponse,
+  MedicineResponse,
   NotificationResponse,
+  PondCycleResponse,
   PondDashboardResponse,
+  PondHarvestAnalyticsResponse,
   PondResponse,
+  RoleResponse,
   SiteResponse,
   UserResponse,
 } from '@/api/types';
@@ -193,3 +203,135 @@ export const inactiveUser: UserResponse = {
   role: 'SUPERVISOR',
   isActive: false,
 };
+
+export const roles: RoleResponse[] = [
+  { id: 'role-admin', name: 'ADMIN', description: 'Administrator' },
+  { id: 'role-worker', name: 'WORKER', description: 'Field worker' },
+  { id: 'role-driver', name: 'DRIVER', description: 'Driver' },
+];
+
+export const activeCycle: PondCycleResponse = {
+  id: 'cycle-1',
+  pondId: 'pond-1',
+  pondName: 'Pond One',
+  cycleNumber: 3,
+  species: 'VANNAMEI',
+  stockingDate: '2026-05-01',
+  shrimpCount: 500000,
+  stockingCompleted: true,
+  status: 'ACTIVE',
+};
+
+export const feedSchedules: FeedScheduleResponse[] = [
+  {
+    id: 'sch-1',
+    pondCycleId: 'cycle-1',
+    sessionNumber: 1,
+    feedingTime: '08:00:00',
+    isActive: true,
+  },
+];
+
+export const feedEntries: FeedEntryResponse[] = [
+  {
+    id: 'fe-1',
+    pondCycleId: 'cycle-1',
+    feedScheduleId: 'sch-1',
+    sessionNumber: 1,
+    feedDate: '2026-07-18',
+    feedSize: 'ONE',
+    feedQuantityKg: 25,
+    remarks: null,
+    createdBy: 'EMP-WORK',
+  },
+];
+
+export const medicines: MedicineResponse[] = [
+  {
+    id: 'med-1',
+    pondCycleId: 'cycle-1',
+    quantity: 3,
+    unit: 'ML',
+    remarks: 'Vitamin C',
+    status: 'ACTIVE',
+    createdBy: 'EMP-WORK',
+    createdAt: '2026-07-18T09:00:00',
+  },
+];
+
+export const harvests: HarvestResponse[] = [
+  {
+    id: 'h-1',
+    pondCycleId: 'cycle-1',
+    harvestDate: '2026-06-30',
+    harvestQuantityKg: 250,
+    quantityDisplay: '250 kg',
+    billPhotoPath: '/bills/h-1.jpg',
+    buyerName: 'Buyer Co',
+    sellingPricePerKg: 152,
+    totalAmount: 38000,
+    vehicleNumber: 'AP01AB1234',
+    remarks: null,
+    status: 'ACTIVE',
+    uploadedByEmployeeCode: 'EMP-ADMIN',
+    uploadedAt: '2026-06-30T12:00:00',
+    cancelledByEmployeeCode: null,
+    cancelledAt: null,
+    cancellationReason: null,
+  },
+];
+
+export const feedAnalytics: FeedAnalyticsResponse = {
+  pondId: 'pond-1',
+  pondCode: 'P-01',
+  pondName: 'Pond One',
+  todayFeedKg: 30,
+  weekFeedKg: 180,
+  monthFeedKg: 720,
+  todayFeedEntries: 2,
+  weekFeedEntries: 12,
+  monthFeedEntries: 48,
+};
+
+export const harvestAnalytics: PondHarvestAnalyticsResponse = {
+  pondId: 'pond-1',
+  pondCode: 'P-01',
+  pondName: 'Pond One',
+  harvestCount: 1,
+  totalHarvestKg: 250,
+  averageHarvestKg: 250,
+  totalRevenue: 38000,
+  lastHarvestDate: '2026-06-30',
+  lastHarvestQuantityKg: 250,
+  lastHarvestRevenue: 38000,
+  lastBuyer: 'Buyer Co',
+};
+
+export const inventoryAnalytics: InventoryAnalyticsResponse = {
+  siteId: 'site-1',
+  siteCode: 'S-001',
+  siteName: 'North Farm',
+  deliveredTodayKg: 0,
+  deliveredWeekKg: 500,
+  deliveredMonthKg: 2000,
+  totalDeliveredKg: 5000,
+  consumedTodayKg: 30,
+  consumedWeekKg: 180,
+  consumedMonthKg: 720,
+  totalConsumedKg: 3000,
+  availableKg: 2000,
+  availableBags: 80,
+};
+
+export const harvestHistory: HarvestHistoryResponse[] = [
+  {
+    harvestId: 'h-1',
+    cycleNumber: 3,
+    harvestDate: '2026-06-30',
+    harvestQuantityKg: 250,
+    buyerName: 'Buyer Co',
+    sellingPricePerKg: 152,
+    totalAmount: 38000,
+    status: 'ACTIVE',
+  },
+];
