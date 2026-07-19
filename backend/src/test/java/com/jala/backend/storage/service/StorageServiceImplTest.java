@@ -45,10 +45,10 @@ class StorageServiceImplTest {
         String path = service.buildObjectPath(
                 StorageFolder.MEDICINE, "entity 1", "scan file.png");
 
-        assertThat(path).isEqualTo(
-                StorageFolder.MEDICINE.getFolder()
-                        + "/entity%201/scan%20file.png");
-        assertThat(path).doesNotContain(" ");
+        assertThat(path)
+                .isEqualTo(StorageFolder.MEDICINE.getFolder()
+                        + "/entity%201/scan%20file.png")
+                .doesNotContain(" ");
     }
 
     @Test

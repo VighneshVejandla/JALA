@@ -58,8 +58,11 @@ public class AnalyticsServiceImpl
 
     // Self-reference (proxy) so the dashboard's sub-analytics calls go
     // through the transactional proxy instead of a self-invocation.
+    // Field injection is required — constructor-injecting the bean into
+    // itself would be a circular dependency.
     @Lazy
     @Autowired
+    @SuppressWarnings("java:S6813")
     private AnalyticsService self;
 
     @Override
