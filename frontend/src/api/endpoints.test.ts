@@ -120,7 +120,29 @@ describe('api endpoint wrappers', () => {
     expect((await api.analytics.feedPond('pond-1')).monthFeedKg).toBe(720);
     expect((await api.analytics.harvestPond('pond-1')).harvestCount).toBe(1);
     expect((await api.analytics.inventorySite('site-1')).availableBags).toBe(80);
+    expect((await api.analytics.feedSite('site-1')).pondsFedMonth).toBe(4);
+    expect((await api.analytics.harvestSite('site-1')).monthRevenue).toBe(540000);
     expect((await api.feedInventory.bySite('site-1')).availableKg).toBe(2000);
+    expect(await api.feedInventory.list()).toHaveLength(2);
+  });
+
+  it('report charts', async () => {
+    expect(await api.reports.revenueChart('site-1')).toHaveLength(12);
+    expect(await api.reports.feedChart('site-1')).toHaveLength(12);
+    expect(await api.reports.harvestChart('site-1')).toHaveLength(12);
+  });
+
+  it('site/pond activation and deliveries', async () => {
+    await api.sites.activate('site-1');
+    await api.sites.deactivate('site-1');
+    await api.ponds.activate('pond-1');
+    await api.ponds.deactivate('pond-1');
+    expect(await api.feedDeliveries.sites('d-1')).toHaveLength(1);
+    await api.feedDeliveries.addSite('d-1', { siteId: 'site-1', numberOfBags: 5 });
+    expect(await api.siteDeliveryReceipts.list('sd-1')).toHaveLength(1);
+    const rf = new FormData();
+    rf.append('siteDeliveryId', 'sd-1');
+    await api.siteDeliveryReceipts.upload(rf);
   });
 
   it('exports return blobs', async () => {

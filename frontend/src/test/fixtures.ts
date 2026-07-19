@@ -323,6 +323,86 @@ export const inventoryAnalytics: InventoryAnalyticsResponse = {
   availableBags: 80,
 };
 
+export const siteDeliveries = [
+  {
+    id: 'sd-1',
+    siteId: 'site-1',
+    siteCode: 'S-001',
+    siteName: 'North Farm',
+    numberOfBags: 20,
+    bagWeightKg: 25,
+    totalKg: 500,
+    remarks: null,
+    status: 'ACTIVE',
+  },
+];
+
+export const receipts = [
+  {
+    id: 'rc-1',
+    siteDeliveryId: 'sd-1',
+    photoPath: '/receipts/rc-1.jpg',
+    remarks: null,
+    status: 'ACTIVE',
+    uploadedByEmployeeCode: 'EMP-DRIVE',
+    uploadedAt: '2026-07-18T08:30:00',
+  },
+];
+
+export const siteFeedAnalytics = {
+  siteId: 'site-1',
+  siteCode: 'S-001',
+  siteName: 'North Farm',
+  todayFeedKg: 120,
+  weekFeedKg: 700,
+  monthFeedKg: 2800,
+  todayFeedEntries: 6,
+  weekFeedEntries: 40,
+  monthFeedEntries: 160,
+  pondsFedToday: 3,
+  pondsFedWeek: 4,
+  pondsFedMonth: 4,
+};
+
+export const siteHarvestAnalytics = {
+  siteId: 'site-1',
+  siteCode: 'S-001',
+  siteName: 'North Farm',
+  harvestCount: 5,
+  todayHarvestKg: 300,
+  weekHarvestKg: 900,
+  monthHarvestKg: 3600,
+  todayRevenue: 45000,
+  weekRevenue: 135000,
+  monthRevenue: 540000,
+};
+
+export const monthlyChart = Array.from({ length: 12 }, (_, i) => ({
+  month: i + 1,
+  value: (i + 1) * 100,
+}));
+
+export const feedInventoryList = [
+  {
+    id: 'inv-1',
+    siteId: 'site-1',
+    siteCode: 'S-001',
+    siteName: 'North Farm',
+    totalReceivedKg: 5000,
+    totalConsumedKg: 3000,
+    availableKg: 2000,
+  },
+  {
+    id: 'inv-2',
+    siteId: 'site-2',
+    siteCode: 'S-002',
+    siteName: 'South Farm',
+    totalReceivedKg: 5000,
+    totalConsumedKg: 4600,
+    availableKg: 400, // < 20% → low stock
+  },
+];
+
 export const harvestHistory: HarvestHistoryResponse[] = [
   {
     harvestId: 'h-1',

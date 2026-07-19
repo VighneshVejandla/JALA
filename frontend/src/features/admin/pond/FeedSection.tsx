@@ -274,9 +274,12 @@ function RecordFeedDialog({
 export function FeedSection({
   cycleId,
   pondId,
+  canManageSessions = true,
 }: {
   cycleId: string;
   pondId: string;
+  /** Only admins can create feeding sessions; workers record against them. */
+  canManageSessions?: boolean;
 }) {
   const date = todayIso();
   const analytics = useFeedAnalytics(pondId);
@@ -289,7 +292,7 @@ export function FeedSection({
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-base">Feed</CardTitle>
         <div className="flex gap-2">
-          <AddSessionsDialog cycleId={cycleId} />
+          {canManageSessions && <AddSessionsDialog cycleId={cycleId} />}
           <RecordFeedDialog cycleId={cycleId} sessions={sessions} date={date} />
         </div>
       </CardHeader>

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Plus, Truck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, Plus, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateDelivery, useDeliveries } from '@/api/queries';
+import { ROUTES } from '@/constants/routes';
 import {
   EmptyBlock,
   ErrorBlock,
@@ -38,6 +40,7 @@ function statusTone(status: string): string {
 export function DriverDeliveries() {
   const { data, isLoading, isError, refetch } = useDeliveries();
   const createDelivery = useCreateDelivery();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [remarks, setRemarks] = useState('');
 
@@ -105,7 +108,16 @@ export function DriverDeliveries() {
 
       <div className="space-y-3">
         {deliveries.map((d) => (
-          <Card key={d.id}>
+          <Card
+            key={d.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(ROUTES.driverDeliveryDetail(d.id))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') navigate(ROUTES.driverDeliveryDetail(d.id));
+            }}
+            className="cursor-pointer transition-colors hover:border-primary/40"
+          >
             <CardContent className="flex items-start gap-3 p-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Truck className="h-5 w-5" />
@@ -127,6 +139,7 @@ export function DriverDeliveries() {
               >
                 {d.status}
               </Badge>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
             </CardContent>
           </Card>
         ))}

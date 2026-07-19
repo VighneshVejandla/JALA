@@ -104,6 +104,14 @@ export const handlers = [
   http.get(`${BASE}/analytics/inventory/site/:siteId`, () =>
     ok(fx.inventoryAnalytics),
   ),
+  http.get(`${BASE}/analytics/feed/site/:siteId`, () => ok(fx.siteFeedAnalytics)),
+  http.get(`${BASE}/analytics/harvest/site/:siteId`, () =>
+    ok(fx.siteHarvestAnalytics),
+  ),
+  http.get(`${BASE}/reports/chart/revenue/:siteId`, () => ok(fx.monthlyChart)),
+  http.get(`${BASE}/reports/chart/feed/:siteId`, () => ok(fx.monthlyChart)),
+  http.get(`${BASE}/reports/chart/harvest/:siteId`, () => ok(fx.monthlyChart)),
+  http.get(`${BASE}/feed-inventory`, () => ok(fx.feedInventoryList)),
 
   http.get(`${BASE}/history/pond/:pondId/cycles`, () =>
     ok([
@@ -156,6 +164,21 @@ export const handlers = [
   http.get(`${BASE}/history/pond/:pondId/timeline`, () =>
     ok({ pondId: 'pond-1', pondCode: 'P-01', pondName: 'Pond One', timeline: [] }),
   ),
+
+  http.get(`${BASE}/feed-deliveries/:deliveryId/sites`, () =>
+    ok(fx.siteDeliveries),
+  ),
+  http.post(`${BASE}/feed-deliveries/:deliveryId/sites`, () =>
+    ok(fx.siteDeliveries[0]),
+  ),
+  http.get(`${BASE}/feed-deliveries/:id`, () => ok(fx.deliveries[0])),
+  http.get(`${BASE}/site-delivery-receipts`, () => ok(fx.receipts)),
+  http.post(`${BASE}/site-delivery-receipts`, () => ok(fx.receipts[0])),
+
+  http.patch(`${BASE}/sites/:id/activate`, () => ok(null)),
+  http.patch(`${BASE}/sites/:id/deactivate`, () => ok(null)),
+  http.patch(`${BASE}/ponds/:id/activate`, () => ok(null)),
+  http.patch(`${BASE}/ponds/:id/deactivate`, () => ok(null)),
 
   http.post(`${BASE}/export/:kind/:format`, () =>
     HttpResponse.arrayBuffer(new ArrayBuffer(8), {

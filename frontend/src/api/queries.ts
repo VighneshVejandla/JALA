@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { api } from './endpoints';
 import type {
+  AddSiteDeliveryRequest,
   CreateFeedEntryRequest,
   CreateFeedScheduleRequest,
   CreateMedicineRequest,
@@ -98,6 +99,77 @@ export function useCreateDelivery() {
     mutationFn: (body: { remarks?: string }) =>
       api.feedDeliveries.create(body),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.deliveries }),
+  });
+}
+
+export function useDelivery(id: string | null) {
+  return useQuery({
+    queryKey: id ? ['feed-deliveries', id] : ['feed-deliveries', 'none'],
+    queryFn: () => api.feedDeliveries.byId(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useDeliverySites(deliveryId: string | null) {
+  return useQuery({
+    queryKey: deliveryId
+      ? ['feed-deliveries', deliveryId, 'sites']
+      : ['feed-deliveries', 'sites', 'none'],
+    queryFn: () => api.feedDeliveries.sites(deliveryId as string),
+    enabled: !!deliveryId,
+  });
+}
+
+export function useAddSiteDelivery(deliveryId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddSiteDeliveryRequest) =>
+      api.feedDeliveries.addSite(deliveryId, body),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ['feed-deliveries', deliveryId, 'sites'],
+      }),
+  });
+}
+
+export function useDeliveryReceipts(siteDeliveryId: string | null) {
+  return useQuery({
+    queryKey: siteDeliveryId
+      ? ['receipts', siteDeliveryId]
+      : ['receipts', 'none'],
+    queryFn: () =>
+      api.siteDeliveryReceipts.list(siteDeliveryId as string),
+    enabled: !!siteDeliveryId,
+  });
+}
+
+export function useUploadReceipt(siteDeliveryId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (form: FormData) => api.siteDeliveryReceipts.upload(form),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ['receipts', siteDeliveryId] }),
+  });
+}
+
+export function useSetSiteActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      active ? api.sites.activate(id) : api.sites.deactivate(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.sites });
+    },
+  });
+}
+
+export function useSetPondActive(siteId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      active ? api.ponds.activate(id) : api.ponds.deactivate(id),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: qk.pondsBySite(siteId) }),
   });
 }
 
@@ -285,6 +357,55 @@ export function useInventory(siteId: string | null) {
     queryKey: siteId ? qk.inventory(siteId) : ['analytics', 'inventory', 'none'],
     queryFn: () => api.analytics.inventorySite(siteId as string),
     enabled: !!siteId,
+  });
+}
+
+export function useSiteFeedAnalytics(siteId: string | null) {
+  return useQuery({
+    queryKey: siteId ? ['analytics', 'feed', 'site', siteId] : ['analytics', 'feed', 'none'],
+    queryFn: () => api.analytics.feedSite(siteId as string),
+    enabled: !!siteId,
+  });
+}
+
+export function useSiteHarvestAnalytics(siteId: string | null) {
+  return useQuery({
+    queryKey: siteId
+      ? ['analytics', 'harvest', 'site', siteId]
+      : ['analytics', 'harvest', 'none'],
+    queryFn: () => api.analytics.harvestSite(siteId as string),
+    enabled: !!siteId,
+  });
+}
+
+export function useRevenueChart(siteId: string | null) {
+  return useQuery({
+    queryKey: siteId ? ['chart', 'revenue', siteId] : ['chart', 'none'],
+    queryFn: () => api.reports.revenueChart(siteId as string),
+    enabled: !!siteId,
+  });
+}
+
+export function useFeedChart(siteId: string | null) {
+  return useQuery({
+    queryKey: siteId ? ['chart', 'feed', siteId] : ['chart', 'none'],
+    queryFn: () => api.reports.feedChart(siteId as string),
+    enabled: !!siteId,
+  });
+}
+
+export function useHarvestChart(siteId: string | null) {
+  return useQuery({
+    queryKey: siteId ? ['chart', 'harvest', siteId] : ['chart', 'none'],
+    queryFn: () => api.reports.harvestChart(siteId as string),
+    enabled: !!siteId,
+  });
+}
+
+export function useFeedInventoryList() {
+  return useQuery({
+    queryKey: ['feed-inventory'],
+    queryFn: api.feedInventory.list,
   });
 }
 

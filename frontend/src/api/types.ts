@@ -128,6 +128,34 @@ export interface FeedDeliveryResponse {
   status: string;
 }
 
+export interface SiteDeliveryResponse {
+  id: string;
+  siteId: string;
+  siteCode: string;
+  siteName: string;
+  numberOfBags: number | null;
+  bagWeightKg: number | null;
+  totalKg: number | null;
+  remarks: string | null;
+  status: string;
+}
+
+export interface AddSiteDeliveryRequest {
+  siteId: string;
+  numberOfBags: number;
+  remarks?: string;
+}
+
+export interface SiteDeliveryReceiptResponse {
+  id: string;
+  siteDeliveryId: string;
+  photoPath: string;
+  remarks: string | null;
+  status: string;
+  uploadedByEmployeeCode: string | null;
+  uploadedAt: string;
+}
+
 /** Spring Data Page envelope, used by list endpoints that paginate. */
 export interface Page<T> {
   content: T[];
@@ -484,4 +512,38 @@ export interface FeedInventoryResponse {
   totalReceivedKg: number;
   totalConsumedKg: number;
   availableKg: number;
+}
+
+export interface SiteFeedAnalyticsResponse {
+  siteId: string;
+  siteCode: string;
+  siteName: string;
+  todayFeedKg: number;
+  weekFeedKg: number;
+  monthFeedKg: number;
+  todayFeedEntries: number;
+  weekFeedEntries: number;
+  monthFeedEntries: number;
+  pondsFedToday: number;
+  pondsFedWeek: number;
+  pondsFedMonth: number;
+}
+
+export interface SiteHarvestAnalyticsResponse {
+  siteId: string;
+  siteCode: string;
+  siteName: string;
+  harvestCount: number;
+  todayHarvestKg: number;
+  weekHarvestKg: number;
+  monthHarvestKg: number;
+  todayRevenue: number;
+  weekRevenue: number;
+  monthRevenue: number;
+}
+
+/** A single month bucket in a 12-month report chart series. */
+export interface MonthlyChartResponse {
+  month: number; // 1–12
+  value: number;
 }

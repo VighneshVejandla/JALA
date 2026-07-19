@@ -1,6 +1,7 @@
 import { del, get, patch, post, postBlob, postForm } from './client';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type {
+  AddSiteDeliveryRequest,
   CreateFeedEntryRequest,
   CreateFeedScheduleRequest,
   CreateMedicineRequest,
@@ -23,6 +24,7 @@ import type {
   MedicineHistoryResponse,
   MedicineResponse,
   MedicinePhotoResponse,
+  MonthlyChartResponse,
   NotificationResponse,
   NotificationsResponse,
   PondCycleHistoryResponse,
@@ -33,6 +35,10 @@ import type {
   PondTimelineResponse,
   ReportFilterRequest,
   RoleResponse,
+  SiteDeliveryReceiptResponse,
+  SiteDeliveryResponse,
+  SiteFeedAnalyticsResponse,
+  SiteHarvestAnalyticsResponse,
   SiteResponse,
   UpdateUserRequest,
   UserResponse,
@@ -70,6 +76,8 @@ export const api = {
     byId: (id: string) => get<SiteResponse>(ENDPOINTS.sites.byId(id)),
     create: (body: CreateSiteRequest) =>
       post<SiteResponse>(ENDPOINTS.sites.base, body),
+    activate: (id: string) => patch<void>(ENDPOINTS.sites.activate(id)),
+    deactivate: (id: string) => patch<void>(ENDPOINTS.sites.deactivate(id)),
   },
 
   ponds: {
@@ -79,6 +87,8 @@ export const api = {
     byId: (id: string) => get<PondResponse>(ENDPOINTS.ponds.byId(id)),
     create: (body: CreatePondRequest) =>
       post<PondResponse>(ENDPOINTS.ponds.base, body),
+    activate: (id: string) => patch<void>(ENDPOINTS.ponds.activate(id)),
+    deactivate: (id: string) => patch<void>(ENDPOINTS.ponds.deactivate(id)),
   },
 
   pondCycles: {
@@ -164,13 +174,27 @@ export const api = {
   analytics: {
     feedPond: (pondId: string) =>
       get<FeedAnalyticsResponse>(ENDPOINTS.analytics.feedPond(pondId)),
+    feedSite: (siteId: string) =>
+      get<SiteFeedAnalyticsResponse>(ENDPOINTS.analytics.feedSite(siteId)),
     harvestPond: (pondId: string) =>
       get<PondHarvestAnalyticsResponse>(ENDPOINTS.analytics.harvestPond(pondId)),
+    harvestSite: (siteId: string) =>
+      get<SiteHarvestAnalyticsResponse>(ENDPOINTS.analytics.harvestSite(siteId)),
     inventorySite: (siteId: string) =>
       get<InventoryAnalyticsResponse>(ENDPOINTS.analytics.inventorySite(siteId)),
   },
 
+  reports: {
+    revenueChart: (siteId: string) =>
+      get<MonthlyChartResponse[]>(ENDPOINTS.reports.revenueChart(siteId)),
+    feedChart: (siteId: string) =>
+      get<MonthlyChartResponse[]>(ENDPOINTS.reports.feedChart(siteId)),
+    harvestChart: (siteId: string) =>
+      get<MonthlyChartResponse[]>(ENDPOINTS.reports.harvestChart(siteId)),
+  },
+
   feedInventory: {
+    list: () => get<FeedInventoryResponse[]>(ENDPOINTS.feedInventory.base),
     bySite: (siteId: string) =>
       get<FeedInventoryResponse>(ENDPOINTS.feedInventory.bySite(siteId)),
   },
@@ -195,5 +219,21 @@ export const api = {
       get<FeedDeliveryResponse>(ENDPOINTS.feedDeliveries.byId(id)),
     create: (body: { remarks?: string }) =>
       post<FeedDeliveryResponse>(ENDPOINTS.feedDeliveries.base, body),
+    sites: (deliveryId: string) =>
+      get<SiteDeliveryResponse[]>(ENDPOINTS.feedDeliveries.sites(deliveryId)),
+    addSite: (deliveryId: string, body: AddSiteDeliveryRequest) =>
+      post<SiteDeliveryResponse>(ENDPOINTS.feedDeliveries.sites(deliveryId), body),
+  },
+
+  siteDeliveryReceipts: {
+    list: (siteDeliveryId: string) =>
+      get<SiteDeliveryReceiptResponse[]>(ENDPOINTS.siteDeliveryReceipts.base, {
+        siteDeliveryId,
+      }),
+    upload: (form: FormData) =>
+      postForm<SiteDeliveryReceiptResponse>(
+        ENDPOINTS.siteDeliveryReceipts.base,
+        form,
+      ),
   },
 };

@@ -1,18 +1,33 @@
+import { Link } from 'react-router-dom';
 import {
+  BarChart3,
   Fish,
+  History,
   MapPin,
   PackageOpen,
   TrendingUp,
+  Users,
   Waves,
   Wheat,
+  type LucideIcon,
 } from 'lucide-react';
 import { useHomeDashboard } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
+import { ROUTES } from '@/constants/routes';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import { StatCard } from '@/components/common/StatCard';
 import { ErrorBlock, LoadingBlock } from '@/components/common/StateViews';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatKg, formatNumber } from '@/lib/format';
+
+const QUICK_LINKS: { to: string; label: string; icon: LucideIcon }[] = [
+  { to: ROUTES.adminAnalytics, label: 'Analytics', icon: BarChart3 },
+  { to: ROUTES.adminInventory, label: 'Inventory', icon: PackageOpen },
+  { to: ROUTES.adminHarvested, label: 'Harvested', icon: Fish },
+  { to: ROUTES.adminHistory, label: 'History', icon: History },
+  { to: ROUTES.adminSites, label: 'Sites', icon: MapPin },
+  { to: ROUTES.adminUsers, label: 'Users', icon: Users },
+];
 
 export function AdminDashboard() {
   const { sites, siteId, select, isLoading: sitesLoading } = useSelectedSite();
@@ -20,6 +35,19 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-2">
+        {QUICK_LINKS.map((q) => (
+          <Link
+            key={q.to}
+            to={q.to}
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 text-center transition-colors hover:border-primary/40"
+          >
+            <q.icon className="h-5 w-5 text-primary" />
+            <span className="text-xs font-medium">{q.label}</span>
+          </Link>
+        ))}
+      </div>
+
       <StatCard
         label="Total Sites"
         value={formatNumber(sites.length)}

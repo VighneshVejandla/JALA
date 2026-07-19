@@ -15,9 +15,12 @@ import {
   useCreatePond,
   useInventory,
   usePondsBySite,
+  useSetPondActive,
+  useSetSiteActive,
   useSite,
 } from '@/api/queries';
 import { ROUTES } from '@/constants/routes';
+import { Switch } from '@/components/ui/switch';
 import { StatCard } from '@/components/common/StatCard';
 import {
   EmptyBlock,
@@ -148,6 +151,8 @@ export function SiteDetail() {
   const site = useSite(siteId ?? null);
   const inventory = useInventory(siteId ?? null);
   const ponds = usePondsBySite(siteId ?? null);
+  const setSiteActive = useSetSiteActive();
+  const setPondActive = useSetPondActive(siteId ?? '');
 
   return (
     <div className="space-y-4">
@@ -175,6 +180,21 @@ export function SiteDetail() {
             <Badge variant={site.data.isActive ? 'default' : 'secondary'}>
               {site.data.isActive ? 'Active' : 'Inactive'}
             </Badge>
+            <Switch
+              className="ml-auto"
+              checked={site.data.isActive}
+              disabled={setSiteActive.isPending}
+              aria-label={site.data.isActive ? 'Deactivate site' : 'Activate site'}
+              onCheckedChange={(next) =>
+                setSiteActive.mutate(
+                  { id: site.data!.id, active: next },
+                  {
+                    onError: (e) =>
+                      toast.error(e instanceof Error ? e.message : 'Update failed'),
+                  },
+                )
+              }
+            />
           </div>
           <p className="text-sm text-muted-foreground">
             {site.data.siteCode}
@@ -238,6 +258,23 @@ export function SiteDetail() {
                   {pond.pondAcres != null && ` · ${pond.pondAcres} acres`}
                 </p>
               </div>
+              <Switch
+                checked={pond.isActive}
+                disabled={setPondActive.isPending}
+                aria-label={
+                  pond.isActive ? `Deactivate ${pond.pondName}` : `Activate ${pond.pondName}`
+                }
+                onClick={(e) => e.stopPropagation()}
+                onCheckedChange={(next) =>
+                  setPondActive.mutate(
+                    { id: pond.id, active: next },
+                    {
+                      onError: (e) =>
+                        toast.error(e instanceof Error ? e.message : 'Update failed'),
+                    },
+                  )
+                }
+              />
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </CardContent>
           </Card>

@@ -58,6 +58,10 @@ describe('HistoryPage', () => {
     const excelButtons = await screen.findAllByRole('button', { name: /excel/i });
     await user.click(excelButtons[0]);
     await waitFor(() => expect(exported).toBe(true));
+
+    const pdfButtons = screen.getAllByRole('button', { name: /pdf/i });
+    await user.click(pdfButtons[0]);
+    await waitFor(() => expect(exported).toBe(true));
   });
 });
 

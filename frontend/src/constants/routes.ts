@@ -15,6 +15,7 @@ export const ROUTES = {
 
   // Driver experience
   driver: '/driver',
+  driverDeliveryDetail: (id: string) => `/driver/deliveries/${id}`,
   driverAlerts: '/driver/alerts',
   driverProfile: '/driver/profile',
 
@@ -26,6 +27,8 @@ export const ROUTES = {
   adminUsers: '/admin/users',
   adminHarvested: '/admin/harvested',
   adminHistory: '/admin/history',
+  adminInventory: '/admin/inventory',
+  adminAnalytics: '/admin/analytics',
   adminAlerts: '/admin/alerts',
   adminProfile: '/admin/profile',
 } as const;

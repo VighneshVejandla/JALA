@@ -88,6 +88,11 @@ export const ENDPOINTS = {
     harvestSite: (siteId: string) => `/analytics/harvest/site/${siteId}`,
     inventorySite: (siteId: string) => `/analytics/inventory/site/${siteId}`,
   },
+  reports: {
+    revenueChart: (siteId: string) => `/reports/chart/revenue/${siteId}`,
+    feedChart: (siteId: string) => `/reports/chart/feed/${siteId}`,
+    harvestChart: (siteId: string) => `/reports/chart/harvest/${siteId}`,
+  },
   feedInventory: {
     base: '/feed-inventory',
     bySite: (siteId: string) => `/feed-inventory/${siteId}`,
@@ -104,5 +109,9 @@ export const ENDPOINTS = {
   feedDeliveries: {
     base: '/feed-deliveries',
     byId: (id: string) => `/feed-deliveries/${id}`,
+    sites: (deliveryId: string) => `/feed-deliveries/${deliveryId}/sites`,
+  },
+  siteDeliveryReceipts: {
+    base: '/site-delivery-receipts',
   },
 } as const;

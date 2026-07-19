@@ -7,6 +7,9 @@ import {
   Wheat,
 } from 'lucide-react';
 import { usePondDashboard } from '@/api/queries';
+import { FeedSection } from '@/features/admin/pond/FeedSection';
+import { MedicineSection } from '@/features/admin/pond/MedicineSection';
+import { HarvestSection } from '@/features/admin/pond/HarvestSection';
 import { StatCard } from '@/components/common/StatCard';
 import { ErrorBlock, LoadingBlock } from '@/components/common/StateViews';
 import { Button } from '@/components/ui/button';
@@ -117,6 +120,19 @@ export function PondDetailPage() {
                 <Detail label="Buyer" value={data.lastBuyerName ?? '—'} />
               </CardContent>
             </Card>
+          )}
+
+          {/* Workers record daily operations against the active cycle. */}
+          {data.activeCycleId && data.cycleStatus === 'ACTIVE' && pondId && (
+            <>
+              <FeedSection
+                cycleId={data.activeCycleId}
+                pondId={pondId}
+                canManageSessions={false}
+              />
+              <MedicineSection cycleId={data.activeCycleId} />
+              <HarvestSection cycleId={data.activeCycleId} />
+            </>
           )}
         </>
       )}
