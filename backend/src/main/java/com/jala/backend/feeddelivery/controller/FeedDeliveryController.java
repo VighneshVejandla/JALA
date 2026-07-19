@@ -42,7 +42,7 @@ public class FeedDeliveryController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPERVISOR','DRIVER')")
     public ResponseEntity<ApiResponse<List<FeedDeliveryResponse>>> getAllDeliveries(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
