@@ -19,7 +19,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER','DRIVER')")
     public ResponseEntity<ApiResponse<NotificationSummaryResponse>>
     getNotifications(
             @RequestParam(required = false) Integer page,
@@ -38,7 +38,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/{notificationId}/read")
-    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER','DRIVER')")
     public ResponseEntity<ApiResponse<Void>>
     markAsRead(
             @PathVariable
@@ -55,7 +55,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-count")
-    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER','DRIVER')")
     public ResponseEntity<ApiResponse<Long>>
     getUnreadCount() {
 

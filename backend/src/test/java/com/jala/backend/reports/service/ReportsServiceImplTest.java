@@ -30,6 +30,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -221,8 +222,7 @@ class ReportsServiceImplTest {
     void getDashboard_success() {
         // getDashboard delegates to the sibling methods through the injected
         // self proxy; point it at a mock so this test covers the composition.
-        ReportsService selfProxy =
-                org.mockito.Mockito.mock(ReportsService.class);
+        ReportsService selfProxy = mock(ReportsService.class);
         org.springframework.test.util.ReflectionTestUtils.setField(
                 service, "self", selfProxy);
 
