@@ -1,4 +1,5 @@
 import type { BackendRole } from '@/api/types';
+import { ROUTES } from '@/constants/routes';
 
 /**
  * The three product experiences. Backend has five roles; we fold them:
@@ -26,12 +27,12 @@ export function experienceOf(role: BackendRole): Experience {
 export function homePathFor(exp: Experience): string {
   switch (exp) {
     case 'admin':
-      return '/admin';
+      return ROUTES.admin;
     case 'driver':
-      return '/driver';
+      return ROUTES.driver;
     case 'user':
     default:
-      return '/app';
+      return ROUTES.app;
   }
 }
 

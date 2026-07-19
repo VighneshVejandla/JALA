@@ -1,8 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSites } from '@/api/queries';
+import { STORAGE_KEYS } from '@/constants/storage';
 import type { SiteResponse } from '@/api/types';
 
-const STORAGE_KEY = 'jala.selectedSiteId';
+const STORAGE_KEY = STORAGE_KEYS.selectedSiteId;
+
+/** Forget the persisted site (call on logout so the next user starts fresh). */
+export function clearSelectedSite() {
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 /**
  * Tracks the site the user is currently viewing. Persists the choice and
@@ -15,18 +21,20 @@ export function useSelectedSite() {
     () => localStorage.getItem(STORAGE_KEY),
   );
 
+  const select = useCallback((id: string) => {
+    setSiteId(id);
+    localStorage.setItem(STORAGE_KEY, id);
+  }, []);
+
+  // Once sites load, keep the selection valid — default to the first site
+  // (and persist it) whenever the current id is missing or no longer accessible.
   useEffect(() => {
     if (sites.length === 0) return;
     const stillValid = siteId && sites.some((s) => s.id === siteId);
     if (!stillValid) {
-      setSiteId(sites[0].id);
+      select(sites[0].id);
     }
-  }, [sites, siteId]);
-
-  const select = (id: string) => {
-    setSiteId(id);
-    localStorage.setItem(STORAGE_KEY, id);
-  };
+  }, [sites, siteId, select]);
 
   const selectedSite = sites.find((s) => s.id === siteId) ?? null;
 

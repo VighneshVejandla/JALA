@@ -1,6 +1,7 @@
 import {
   Bell,
   Fish,
+  MapPin,
   PackageOpen,
   TrendingUp,
   Waves,
@@ -10,7 +11,11 @@ import { useHomeDashboard } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import { StatCard } from '@/components/common/StatCard';
-import { ErrorBlock, LoadingBlock } from '@/components/common/StateViews';
+import {
+  EmptyBlock,
+  ErrorBlock,
+  LoadingBlock,
+} from '@/components/common/StateViews';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatKg, formatNumber } from '@/lib/format';
@@ -22,6 +27,14 @@ export function UserHome() {
   return (
     <div className="space-y-4">
       <SiteSelector sites={sites} siteId={siteId} onSelect={select} />
+
+      {!sitesLoading && sites.length === 0 && (
+        <EmptyBlock
+          icon={<MapPin className="h-6 w-6" />}
+          title="No sites assigned"
+          description="You don't have access to any sites yet. Contact your administrator."
+        />
+      )}
 
       {(sitesLoading || isLoading) && <LoadingBlock label="Loading dashboard…" />}
 

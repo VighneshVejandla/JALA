@@ -8,8 +8,9 @@ import {
   type ReactNode,
 } from 'react';
 import { api } from '@/api/endpoints';
-import { setUnauthorizedHandler, tokenStore } from '@/api/client';
+import { ApiError, setUnauthorizedHandler, tokenStore } from '@/api/client';
 import type { BackendRole, UserResponse } from '@/api/types';
+import { clearSelectedSite } from '@/hooks/useSelectedSite';
 import { experienceOf, type Experience } from './roles';
 
 interface AuthState {
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     tokenStore.clear();
+    clearSelectedSite();
     setUser(null);
   }, []);
 
@@ -43,9 +45,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await api.auth.me();
       setUser(me);
-    } catch {
-      // Token invalid/expired — the client interceptor already cleared it.
-      setUser(null);
+    } catch (err) {
+      // Only a 401 means the session is actually invalid (the interceptor has
+      // already cleared the token). A transient 5xx/network error must NOT log
+      // out a user whose token is still valid — keep the token and retry once.
+      if (err instanceof ApiError && err.status === 401) {
+        setUser(null);
+      } else {
+        try {
+          setUser(await api.auth.me());
+        } catch {
+          setUser(null);
+        }
+      }
     } finally {
       setIsLoading(false);
     }

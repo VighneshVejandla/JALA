@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Waves } from 'lucide-react';
+import { ChevronRight, MapPin, Waves } from 'lucide-react';
 import { usePondsBySite } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
+import { ROUTES } from '@/constants/routes';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import {
   EmptyBlock,
@@ -12,13 +13,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export function PondsPage() {
-  const { sites, siteId, select } = useSelectedSite();
+  const { sites, siteId, select, isLoading: sitesLoading } = useSelectedSite();
   const { data, isLoading, isError, refetch } = usePondsBySite(siteId);
   const navigate = useNavigate();
 
   return (
     <div className="space-y-4">
       <SiteSelector sites={sites} siteId={siteId} onSelect={select} />
+
+      {!sitesLoading && sites.length === 0 && (
+        <EmptyBlock
+          icon={<MapPin className="h-6 w-6" />}
+          title="No sites assigned"
+          description="You don't have access to any sites yet. Contact your administrator."
+        />
+      )}
 
       {isLoading && <LoadingBlock label="Loading ponds…" />}
       {isError && (
@@ -38,9 +47,9 @@ export function PondsPage() {
             key={pond.id}
             role="button"
             tabIndex={0}
-            onClick={() => navigate(`/app/ponds/${pond.id}`)}
+            onClick={() => navigate(ROUTES.pondDetail(pond.id))}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') navigate(`/app/ponds/${pond.id}`);
+              if (e.key === 'Enter') navigate(ROUTES.pondDetail(pond.id));
             }}
             className="cursor-pointer transition-colors hover:border-primary/40"
           >

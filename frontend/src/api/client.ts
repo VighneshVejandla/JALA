@@ -4,16 +4,15 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from 'axios';
+import { STORAGE_KEYS } from '@/constants/storage';
 import type { ApiResponse } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
-const TOKEN_KEY = 'jala.accessToken';
-
 export const tokenStore = {
-  get: (): string | null => localStorage.getItem(TOKEN_KEY),
-  set: (token: string) => localStorage.setItem(TOKEN_KEY, token),
-  clear: () => localStorage.removeItem(TOKEN_KEY),
+  get: (): string | null => localStorage.getItem(STORAGE_KEYS.accessToken),
+  set: (token: string) => localStorage.setItem(STORAGE_KEYS.accessToken, token),
+  clear: () => localStorage.removeItem(STORAGE_KEYS.accessToken),
 };
 
 /**

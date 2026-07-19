@@ -1,5 +1,6 @@
 import {
   Fish,
+  MapPin,
   PackageOpen,
   TrendingUp,
   Waves,
@@ -19,18 +20,12 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Sites"
-          value={formatNumber(sites.length)}
-          icon={Waves}
-        />
-        <StatCard
-          label="Active Cycles"
-          value={data ? formatNumber(data.activeCycles) : '—'}
-          icon={Waves}
-        />
-      </div>
+      <StatCard
+        label="Total Sites"
+        value={formatNumber(sites.length)}
+        icon={MapPin}
+        hint="Across the organization"
+      />
 
       <SiteSelector sites={sites} siteId={siteId} onSelect={select} />
 
@@ -52,6 +47,12 @@ export function AdminDashboard() {
             </Card>
           )}
           <div className="grid grid-cols-2 gap-3">
+            <StatCard
+              label="Active Cycles"
+              value={formatNumber(data.activeCycles)}
+              icon={Waves}
+              hint={`at ${data.siteName}`}
+            />
             <StatCard label="Today's Feed" value={formatKg(data.todayFeedKg)} icon={Wheat} />
             <StatCard
               label="Available Feed"

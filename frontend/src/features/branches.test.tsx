@@ -128,6 +128,38 @@ describe('users list branches', () => {
   });
 });
 
+describe('no sites assigned', () => {
+  it('UserHome shows an empty state when the user has no sites', async () => {
+    asWorker();
+    server.use(http.get(`${BASE}/sites`, () => ok([])));
+    renderWithProviders(<AppRoutes />, { route: '/app', authed: true });
+    expect(await screen.findByText('No sites assigned')).toBeInTheDocument();
+  });
+
+  it('PondsPage shows an empty state when the user has no sites', async () => {
+    asWorker();
+    server.use(http.get(`${BASE}/sites`, () => ok([])));
+    renderWithProviders(<AppRoutes />, { route: '/app/ponds', authed: true });
+    expect(await screen.findByText('No sites assigned')).toBeInTheDocument();
+  });
+});
+
+describe('session restore resilience', () => {
+  it('retries a transient /auth/me failure instead of logging out', async () => {
+    let calls = 0;
+    server.use(
+      http.get(`${BASE}/auth/me`, () => {
+        calls += 1;
+        return calls === 1 ? err(503) : ok(fx.workerUser);
+      }),
+    );
+    renderWithProviders(<AppRoutes />, { route: '/app', authed: true });
+    // First /me 503s; the retry succeeds and the session is restored.
+    expect(await screen.findByText("Today's Feed")).toBeInTheDocument();
+    expect(calls).toBeGreaterThanOrEqual(2);
+  });
+});
+
 describe('alerts error state', () => {
   it('shows an error block', async () => {
     asWorker();
