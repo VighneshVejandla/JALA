@@ -40,7 +40,7 @@ export const api = {
   },
 
   notifications: {
-    list: () => get<NotificationResponse[]>(ENDPOINTS.notifications.base),
+    list: () => get<NotificationResponse>(ENDPOINTS.notifications.base),
     unreadCount: () => get<number>(ENDPOINTS.notifications.unreadCount),
     markRead: (id: string) =>
       patch<NotificationResponse>(ENDPOINTS.notifications.read(id)),

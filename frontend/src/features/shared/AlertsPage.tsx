@@ -17,7 +17,12 @@ export function AlertsPage() {
   if (isLoading) return <LoadingBlock label="Loading alerts…" />;
   if (isError)
     return <ErrorBlock message="Could not load alerts." onRetry={() => refetch()} />;
-  if (!data || data.length === 0)
+
+    console.log("Notifications:", data);
+
+    const notifications = data?.notifications ?? [];
+
+  if (notifications.length === 0)
     return (
       <EmptyBlock
         icon={<BellOff className="h-6 w-6" />}
@@ -28,7 +33,7 @@ export function AlertsPage() {
 
   return (
     <div className="space-y-3">
-      {data.map((n) => {
+      {notifications.map((n) => {
         const unread = n.status === 'UNREAD';
         return (
           <Card key={n.id} className={cn(unread && 'border-primary/40 bg-primary/5')}>

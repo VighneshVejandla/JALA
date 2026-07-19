@@ -138,3 +138,8 @@ export interface Page<T> {
   first: boolean;
   last: boolean;
 }
+
+export interface NotificationsResponse {
+  unreadCount: number;
+  notifications: NotificationResponse[];
+}
