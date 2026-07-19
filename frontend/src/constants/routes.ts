@@ -15,6 +15,7 @@ export const ROUTES = {
 
   // Driver experience
   driver: '/driver',
+  driverAlerts: '/driver/alerts',
   driverProfile: '/driver/profile',
 
   // Admin experience

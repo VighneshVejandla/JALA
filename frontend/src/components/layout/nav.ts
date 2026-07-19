@@ -28,6 +28,7 @@ export const NAV_BY_EXPERIENCE: Record<Experience, NavItem[]> = {
   ],
   driver: [
     { to: ROUTES.driver, label: 'Deliveries', icon: Truck, end: true },
+    { to: ROUTES.driverAlerts, label: 'Alerts', icon: Bell },
     { to: ROUTES.driverProfile, label: 'Profile', icon: User },
   ],
   admin: [

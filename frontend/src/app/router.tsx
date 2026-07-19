@@ -40,6 +40,7 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute allow={['driver']} />}>
         <Route path={ROUTES.driver} element={<AppShell />}>
           <Route index element={<DriverDeliveries />} />
+          <Route path="alerts" element={<AlertsPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>

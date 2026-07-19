@@ -48,6 +48,12 @@ describe('DriverDeliveries', () => {
     await waitFor(() => expect(created).toBe(true));
   });
 
+  it('can view alerts', async () => {
+    asDriver();
+    renderWithProviders(<AppRoutes />, { route: '/driver/alerts', authed: true });
+    expect(await screen.findByText('Low feed')).toBeInTheDocument();
+  });
+
   it('surfaces an error toast when creation fails', async () => {
     asDriver();
     server.use(
