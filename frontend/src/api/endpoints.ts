@@ -15,6 +15,7 @@ import type {
   FeedHistoryResponse,
   FeedInventoryResponse,
   FeedScheduleResponse,
+  GlobalSearchResponse,
   HarvestHistoryResponse,
   HarvestResponse,
   HomeDashboardResponse,
@@ -35,6 +36,7 @@ import type {
   PondTimelineResponse,
   ReportFilterRequest,
   RoleResponse,
+  UpdateFeedEntryRequest,
   SiteDeliveryReceiptResponse,
   SiteDeliveryResponse,
   SiteFeedAnalyticsResponse,
@@ -118,6 +120,8 @@ export const api = {
       }),
     create: (body: CreateFeedEntryRequest) =>
       post<FeedEntryResponse>(ENDPOINTS.feedEntries.base, body),
+    update: (id: string, body: UpdateFeedEntryRequest) =>
+      patch<FeedEntryResponse>(ENDPOINTS.feedEntries.byId(id), body),
   },
 
   medicines: {
@@ -235,5 +239,10 @@ export const api = {
         ENDPOINTS.siteDeliveryReceipts.base,
         form,
       ),
+  },
+
+  search: {
+    query: (keyword: string) =>
+      get<GlobalSearchResponse>(ENDPOINTS.search.base, { keyword }),
   },
 };

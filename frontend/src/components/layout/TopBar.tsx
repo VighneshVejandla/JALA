@@ -1,6 +1,8 @@
-import { LogOut } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
-import { ROLE_LABELS } from '@/auth/roles';
+import { ROLE_LABELS, homePathFor } from '@/auth/roles';
+import { useNotifications } from '@/api/queries';
 import { Button } from '@/components/ui/button';
 import {
   Avatar,
@@ -18,7 +20,10 @@ function initials(name: string): string {
 }
 
 export function TopBar({ title }: { title: string }) {
-  const { user, logout } = useAuth();
+  const { user, experience, logout } = useAuth();
+  const navigate = useNavigate();
+  const notifications = useNotifications();
+  const unread = notifications.data?.unreadCount ?? 0;
 
   return (
     <header
@@ -33,7 +38,23 @@ export function TopBar({ title }: { title: string }) {
           </p>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {experience && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Alerts${unread > 0 ? ` (${unread} unread)` : ''}`}
+            className="relative"
+            onClick={() => navigate(`${homePathFor(experience)}/alerts`)}
+          >
+            <Bell className="h-5 w-5" />
+            {unread > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </Button>
+        )}
         {user && (
           <Avatar className="h-9 w-9 border border-border">
             <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">

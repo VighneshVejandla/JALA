@@ -114,4 +114,7 @@ export const ENDPOINTS = {
   siteDeliveryReceipts: {
     base: '/site-delivery-receipts',
   },
+  search: {
+    base: '/search',
+  },
 } as const;

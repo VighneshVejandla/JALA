@@ -24,6 +24,9 @@ import { HistoryPage } from '@/features/admin/HistoryPage';
 import { HarvestedPage } from '@/features/admin/HarvestedPage';
 import { InventoryPage } from '@/features/admin/InventoryPage';
 import { AnalyticsPage } from '@/features/admin/AnalyticsPage';
+import { ReportsPage } from '@/features/admin/ReportsPage';
+import { SearchPage } from '@/features/admin/SearchPage';
+import { AdminDeliveriesPage } from '@/features/admin/AdminDeliveriesPage';
 // Shared
 import { AlertsPage } from '@/features/shared/AlertsPage';
 import { ProfilePage } from '@/features/shared/ProfilePage';
@@ -66,6 +69,10 @@ export function AppRoutes() {
           <Route path="history" element={<HistoryPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="search" element={<SearchPage />} />
+          <Route path="deliveries" element={<AdminDeliveriesPage />} />
+          <Route path="deliveries/:id" element={<DriverDeliveryDetail />} />
           <Route path="alerts" element={<AlertsPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>

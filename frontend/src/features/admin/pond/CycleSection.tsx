@@ -4,7 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Play, Sprout } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCreateCycle, useHarvestCycle } from '@/api/queries';
+import {
+  useCreateCycle,
+  useCreateHarvest,
+  useHarvestCycle,
+} from '@/api/queries';
 import type { PondCycleResponse, ShrimpSpecies } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,23 +20,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { HarvestForm } from './HarvestForm';
 import {
   Form,
   FormControl,
@@ -163,6 +158,61 @@ function StartCycleDialog({ pondId }: { pondId: string }) {
   );
 }
 
+/**
+ * Guided harvest: record the final harvest (weight/revenue/bill) and, on
+ * success, close the cycle so it moves to history — then the section flips to
+ * "no active cycle" and prompts a new one. Replaces the old two-step flow.
+ */
+function HarvestAndCloseDialog({
+  cycle,
+  pondId,
+}: {
+  cycle: PondCycleResponse;
+  pondId: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const createHarvest = useCreateHarvest(cycle.id);
+  const harvestCycle = useHarvestCycle(pondId);
+  const pending = createHarvest.isPending || harvestCycle.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="w-full">
+          <Sprout className="mr-1 h-4 w-4" /> Harvest &amp; close cycle
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90svh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Harvest &amp; close cycle #{cycle.cycleNumber}</DialogTitle>
+          <DialogDescription>
+            Record the harvest, then this cycle is closed and moved to history.
+          </DialogDescription>
+        </DialogHeader>
+        <HarvestForm
+          cycleId={cycle.id}
+          submitLabel="Record harvest & close"
+          pending={pending}
+          onSubmit={async (fd) => {
+            try {
+              await createHarvest.mutateAsync(fd);
+              await harvestCycle.mutateAsync(cycle.id);
+              toast.success('Harvest recorded and cycle closed', {
+                description: 'Start a new cycle for this pond when ready.',
+              });
+              setOpen(false);
+            } catch (err) {
+              toast.error(
+                err instanceof Error ? err.message : 'Could not complete harvest',
+              );
+            }
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function CycleSection({
   pondId,
   cycle,
@@ -172,7 +222,6 @@ export function CycleSection({
   cycle: PondCycleResponse | null;
   isLoading: boolean;
 }) {
-  const harvestCycle = useHarvestCycle(pondId);
   const isActive = !!cycle && cycle.status === 'ACTIVE';
 
   return (
@@ -202,43 +251,7 @@ export function CycleSection({
               </div>
             </div>
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  disabled={harvestCycle.isPending}
-                >
-                  <Sprout className="mr-1 h-4 w-4" /> Convert to harvested
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Close this cycle?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This marks cycle #{cycle.cycleNumber} as harvested and moves
-                    it to history. You can then start a new cycle for this pond.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() =>
-                      harvestCycle.mutate(cycle.id, {
-                        onSuccess: () => toast.success('Cycle harvested'),
-                        onError: (e) =>
-                          toast.error(
-                            e instanceof Error ? e.message : 'Failed',
-                          ),
-                      })
-                    }
-                  >
-                    Confirm
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <HarvestAndCloseDialog cycle={cycle} pondId={pondId} />
           </>
         )}
       </CardContent>

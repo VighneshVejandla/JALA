@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Clock, Plus, Trash2, Utensils } from 'lucide-react';
+import { Clock, Pencil, Plus, Trash2, Utensils } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useCreateFeedEntry,
@@ -10,8 +10,13 @@ import {
   useFeedAnalytics,
   useFeedEntries,
   useFeedSchedules,
+  useUpdateFeedEntry,
 } from '@/api/queries';
-import { FEED_SIZE_LABELS, type FeedSize } from '@/api/types';
+import {
+  FEED_SIZE_LABELS,
+  type FeedEntryResponse,
+  type FeedSize,
+} from '@/api/types';
 import { StatCard } from '@/components/common/StatCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -269,6 +274,134 @@ function RecordFeedDialog({
   );
 }
 
+// --- Edit an existing feed entry ------------------------------------------
+
+const editSchema = z.object({
+  feedSize: z.enum([
+    'ONE',
+    'TWO',
+    'TWO_S',
+    'THREE',
+    'THREE_S',
+    'FOUR',
+    'FOUR_S',
+    'FIVE',
+  ]),
+  feedQuantityKg: z.coerce.number().positive('Must be greater than 0'),
+  remarks: z.string().optional(),
+});
+type EditValues = z.infer<typeof editSchema>;
+
+function EditFeedEntryDialog({
+  entry,
+  cycleId,
+  date,
+}: {
+  entry: FeedEntryResponse;
+  cycleId: string;
+  date: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const updateEntry = useUpdateFeedEntry(cycleId, date);
+  const form = useForm<EditValues>({
+    resolver: zodResolver(editSchema),
+    values: {
+      feedSize: entry.feedSize,
+      feedQuantityKg: entry.feedQuantityKg,
+      remarks: entry.remarks ?? '',
+    },
+  });
+
+  const onSubmit = async (v: EditValues) => {
+    try {
+      await updateEntry.mutateAsync({
+        id: entry.id,
+        body: {
+          feedSize: v.feedSize,
+          feedQuantityKg: v.feedQuantityKg,
+          remarks: v.remarks || undefined,
+        },
+      });
+      toast.success('Feed entry updated');
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not update entry');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Edit feed entry">
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit feed entry</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="feedSize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Feed size</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {FEED_SIZES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {FEED_SIZE_LABELS[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="feedQuantityKg"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity (kg)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="remarks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Remarks (optional)</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={updateEntry.isPending}>
+              {updateEntry.isPending ? 'Saving…' : 'Save changes'}
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // --- Section --------------------------------------------------------------
 
 export function FeedSection({
@@ -347,12 +480,13 @@ export function FeedSection({
             {entries.data?.map((e) => (
               <div
                 key={e.id}
-                className="flex items-center justify-between rounded-lg border border-border p-2 text-sm"
+                className="flex items-center justify-between gap-2 rounded-lg border border-border p-2 text-sm"
               >
-                <span>
+                <span className="min-w-0 flex-1 truncate">
                   Session {e.sessionNumber} · size {FEED_SIZE_LABELS[e.feedSize]}
                 </span>
                 <span className="font-medium">{formatKg(e.feedQuantityKg)}</span>
+                <EditFeedEntryDialog entry={e} cycleId={cycleId} date={date} />
               </div>
             ))}
           </div>

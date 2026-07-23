@@ -57,7 +57,7 @@ describe('data-variation branches', () => {
     expect(await screen.findAllByText(/250 kg/i)).not.toHaveLength(0);
   });
 
-  it('PondDetailPage (worker) hides the last-harvest card with no harvests', async () => {
+  it('PondDetailPage (worker) shows the no-cycle message when none is active', async () => {
     server.use(
       http.get(`${BASE}/auth/me`, () => ok(fx.workerUser)),
       http.get(`${BASE}/dashboard/:pondId`, () =>
@@ -73,7 +73,9 @@ describe('data-variation branches', () => {
       route: '/app/ponds/pond-1',
       authed: true,
     });
-    expect(await screen.findByText('Current cycle')).toBeInTheDocument();
+    expect(
+      await screen.findByText(/pond cycle has not started yet/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText('Last harvest')).not.toBeInTheDocument();
   });
 });

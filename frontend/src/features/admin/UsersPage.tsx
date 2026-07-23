@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, UserRound } from 'lucide-react';
+import { MapPin, Pencil, Plus, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import {
+  useAssignSite,
   useCreateUser,
   useRoles,
   useSetUserActive,
+  useSites,
+  useUpdateUser,
+  useUserSites,
   useUsers,
 } from '@/api/queries';
+import type { UserResponse } from '@/api/types';
 import { ROLE_LABELS } from '@/auth/roles';
 import {
   EmptyBlock,
@@ -209,6 +214,185 @@ function AddUserDialog() {
   );
 }
 
+const editSchema = z.object({
+  fullName: z.string().min(1, 'Name is required'),
+  roleId: z.string().optional(),
+  email: z.string().email('Invalid email').or(z.literal('')).optional(),
+  phone: z.string().optional(),
+});
+type EditValues = z.infer<typeof editSchema>;
+
+function EditUserDialog({ user }: { user: UserResponse }) {
+  const [open, setOpen] = useState(false);
+  const roles = useRoles();
+  const updateUser = useUpdateUser();
+  const currentRoleId =
+    roles.data?.find((r) => r.name === user.role)?.id ?? '';
+  const form = useForm<EditValues>({
+    resolver: zodResolver(editSchema),
+    values: {
+      fullName: user.fullName,
+      roleId: currentRoleId,
+      email: user.email ?? '',
+      phone: user.phone ?? '',
+    },
+  });
+
+  const onSubmit = async (v: EditValues) => {
+    try {
+      await updateUser.mutateAsync({
+        id: user.id,
+        body: {
+          fullName: v.fullName,
+          roleId: v.roleId || undefined,
+          email: v.email || undefined,
+          phone: v.phone || undefined,
+        },
+      });
+      toast.success('User updated');
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not update user');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={`Edit ${user.fullName}`}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90svh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit user</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="roleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(roles.data ?? []).map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={updateUser.isPending}>
+              {updateUser.isPending ? 'Saving…' : 'Save changes'}
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ManageSitesDialog({ user }: { user: UserResponse }) {
+  const [open, setOpen] = useState(false);
+  const sites = useSites();
+  const userSites = useUserSites(open ? user.id : null);
+  const assign = useAssignSite(user.id);
+  const assigned = new Set(userSites.data ?? []);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={`Manage sites for ${user.fullName}`}>
+          <MapPin className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90svh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Assign sites — {user.fullName}</DialogTitle>
+        </DialogHeader>
+        {userSites.isLoading && <LoadingBlock label="Loading sites…" />}
+        <div className="space-y-2">
+          {(sites.data ?? []).map((s) => (
+            <div
+              key={s.id}
+              className="flex items-center justify-between rounded-lg border border-border p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{s.siteName}</p>
+                <p className="truncate text-xs text-muted-foreground">{s.siteCode}</p>
+              </div>
+              <Switch
+                checked={assigned.has(s.id)}
+                disabled={assign.isPending || userSites.isLoading}
+                aria-label={`Toggle ${s.siteName}`}
+                onCheckedChange={(next) =>
+                  assign.mutate(
+                    { siteId: s.id, assign: next },
+                    {
+                      onError: (e) =>
+                        toast.error(e instanceof Error ? e.message : 'Update failed'),
+                    },
+                  )
+                }
+              />
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function UsersPage() {
   const { data, isLoading, isError, refetch } = useUsers();
   const setActive = useSetUserActive();
@@ -274,6 +458,10 @@ export function UsersPage() {
                       )
                     }
                   />
+                </div>
+                <div className="flex items-center">
+                  <EditUserDialog user={u} />
+                  <ManageSitesDialog user={u} />
                 </div>
               </div>
             </CardContent>

@@ -323,6 +323,28 @@ export const inventoryAnalytics: InventoryAnalyticsResponse = {
   availableBags: 80,
 };
 
+export const globalSearch = {
+  sites: [{ id: 'site-1', type: 'SITE', title: 'North Farm', subtitle: 'S-001' }],
+  ponds: [{ id: 'pond-1', type: 'POND', title: 'Pond One', subtitle: 'P-01' }],
+  feedEntries: [],
+  medicineEntries: [],
+  harvests: [],
+  notifications: [],
+};
+
+export const medicinePhotos = [
+  {
+    id: 'mp-1',
+    medicineEntryId: 'med-1',
+    fileName: 'scan.png',
+    filePath: 'https://example.test/scan.png',
+    contentType: 'image/png',
+    fileSize: 1234,
+    uploadedBy: 'EMP-ADMIN',
+    uploadedAt: '2026-07-18T09:00:00',
+  },
+];
+
 export const siteDeliveries = [
   {
     id: 'sd-1',

@@ -43,8 +43,11 @@ export function DriverDeliveries() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [remarks, setRemarks] = useState('');
+  const [filter, setFilter] = useState<'all' | 'ACTIVE' | 'CANCELLED'>('all');
 
-  const deliveries = data ?? [];
+  const all = data ?? [];
+  const deliveries =
+    filter === 'all' ? all : all.filter((d) => d.status.toUpperCase() === filter);
 
   const submit = async () => {
     try {
@@ -94,11 +97,31 @@ export function DriverDeliveries() {
         </Dialog>
       </div>
 
+      {all.length > 0 && (
+        <div className="inline-flex rounded-lg border border-border p-0.5">
+          {(['all', 'ACTIVE', 'CANCELLED'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={cn(
+                'rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors',
+                filter === f
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground',
+              )}
+            >
+              {f === 'all' ? 'All' : f.toLowerCase()}
+            </button>
+          ))}
+        </div>
+      )}
+
       {isLoading && <LoadingBlock label="Loading deliveries…" />}
       {isError && (
         <ErrorBlock message="Could not load deliveries." onRetry={() => refetch()} />
       )}
-      {data && deliveries.length === 0 && (
+      {data && all.length === 0 && (
         <EmptyBlock
           icon={<Truck className="h-6 w-6" />}
           title="No deliveries yet"

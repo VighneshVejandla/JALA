@@ -29,6 +29,10 @@ export const ROUTES = {
   adminHistory: '/admin/history',
   adminInventory: '/admin/inventory',
   adminAnalytics: '/admin/analytics',
+  adminReports: '/admin/reports',
+  adminSearch: '/admin/search',
+  adminDeliveries: '/admin/deliveries',
+  adminDeliveryDetail: (id: string) => `/admin/deliveries/${id}`,
   adminAlerts: '/admin/alerts',
   adminProfile: '/admin/profile',
 } as const;

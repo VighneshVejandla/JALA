@@ -1,5 +1,11 @@
-import { Bell, BellOff, Check } from 'lucide-react';
-import { useMarkNotificationRead, useNotifications } from '@/api/queries';
+import { useState } from 'react';
+import { Bell, BellOff, Check, CheckCheck } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+} from '@/api/queries';
 import {
   EmptyBlock,
   ErrorBlock,
@@ -10,17 +16,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatDateTime } from '@/lib/format';
 
+type Filter = 'all' | 'unread';
+
 export function AlertsPage() {
   const { data, isLoading, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
+  const markAll = useMarkAllNotificationsRead();
+  const [filter, setFilter] = useState<Filter>('all');
 
   if (isLoading) return <LoadingBlock label="Loading alerts…" />;
   if (isError)
     return <ErrorBlock message="Could not load alerts." onRetry={() => refetch()} />;
 
-  const notifications = data?.notifications ?? [];
+  const all = data?.notifications ?? [];
+  const unreadIds = all.filter((n) => n.status === 'UNREAD').map((n) => n.id);
+  const notifications = filter === 'unread' ? all.filter((n) => n.status === 'UNREAD') : all;
 
-  if (notifications.length === 0)
+  if (all.length === 0)
     return (
       <EmptyBlock
         icon={<BellOff className="h-6 w-6" />}
@@ -31,6 +43,49 @@ export function AlertsPage() {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="inline-flex rounded-lg border border-border p-0.5">
+          {(['all', 'unread'] as Filter[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={cn(
+                'rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors',
+                filter === f
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground',
+              )}
+            >
+              {f}
+              {f === 'unread' && unreadIds.length > 0 && ` (${unreadIds.length})`}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={unreadIds.length === 0 || markAll.isPending}
+          onClick={() =>
+            markAll.mutate(unreadIds, {
+              onSuccess: () => toast.success('All marked read'),
+              onError: (e) =>
+                toast.error(e instanceof Error ? e.message : 'Failed'),
+            })
+          }
+        >
+          <CheckCheck className="mr-1 h-4 w-4" /> Mark all read
+        </Button>
+      </div>
+
+      {notifications.length === 0 && (
+        <EmptyBlock
+          icon={<BellOff className="h-6 w-6" />}
+          title="No unread alerts"
+          description="You're all caught up."
+        />
+      )}
+
       {notifications.map((n) => {
         const unread = n.status === 'UNREAD';
         return (

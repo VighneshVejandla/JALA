@@ -2,16 +2,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Calendar,
-  Fish,
   Pill,
+  Sprout,
   Wheat,
 } from 'lucide-react';
 import { usePondDashboard } from '@/api/queries';
 import { FeedSection } from '@/features/admin/pond/FeedSection';
 import { MedicineSection } from '@/features/admin/pond/MedicineSection';
-import { HarvestSection } from '@/features/admin/pond/HarvestSection';
 import { StatCard } from '@/components/common/StatCard';
-import { ErrorBlock, LoadingBlock } from '@/components/common/StateViews';
+import {
+  EmptyBlock,
+  ErrorBlock,
+  LoadingBlock,
+} from '@/components/common/StateViews';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,12 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  formatCurrency,
-  formatDate,
-  formatKg,
-  formatNumber,
-} from '@/lib/format';
+import { formatDate, formatKg, formatNumber } from '@/lib/format';
 
 export function PondDetailPage() {
   const { pondId } = useParams<{ pondId: string }>();
@@ -57,81 +55,61 @@ export function PondDetailPage() {
             </p>
           </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Current cycle</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              <Detail label="Cycle #" value={formatNumber(data.cycleNumber)} />
-              <Detail label="Species" value={data.species ?? '—'} />
-              <Detail
-                label="Stocked on"
-                value={formatDate(data.stockingDate)}
-                icon={<Calendar className="h-3.5 w-3.5" />}
-              />
-              <Detail
-                label="Days since stocking"
-                value={formatNumber(data.daysSinceStocking)}
-              />
-              <Detail label="Shrimp count" value={formatNumber(data.shrimpCount)} />
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard
-              label="Today's Feed"
-              value={formatKg(data.todayFeedKg)}
-              icon={Wheat}
-              hint={`${formatNumber(data.todayFeedEntries)} entries`}
+          {/* No active cycle → a worker cannot record anything yet. */}
+          {!(data.activeCycleId && data.cycleStatus === 'ACTIVE') && (
+            <EmptyBlock
+              icon={<Sprout className="h-6 w-6" />}
+              title="Pond cycle has not started yet"
+              description="Please contact the administrator to start a cycle for this pond."
             />
-            <StatCard
-              label="Total Feed"
-              value={formatKg(data.totalFeedKg)}
-              icon={Wheat}
-            />
-            <StatCard
-              label="Medicine Entries"
-              value={formatNumber(data.medicineEntryCount)}
-              icon={Pill}
-            />
-            <StatCard
-              label="Harvests"
-              value={formatNumber(data.harvestCount)}
-              icon={Fish}
-              tone="success"
-            />
-          </div>
-
-          {data.harvestCount != null && data.harvestCount > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Last harvest</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                <Detail label="Date" value={formatDate(data.lastHarvestDate)} />
-                <Detail
-                  label="Quantity"
-                  value={formatKg(data.lastHarvestQuantityKg)}
-                />
-                <Detail
-                  label="Amount"
-                  value={formatCurrency(data.lastHarvestAmount)}
-                />
-                <Detail label="Buyer" value={data.lastBuyerName ?? '—'} />
-              </CardContent>
-            </Card>
           )}
 
-          {/* Workers record daily operations against the active cycle. */}
+          {/* Workers record daily feed & medicine against the active cycle. */}
           {data.activeCycleId && data.cycleStatus === 'ACTIVE' && pondId && (
             <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Current cycle</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <Detail label="Cycle #" value={formatNumber(data.cycleNumber)} />
+                  <Detail label="Species" value={data.species ?? '—'} />
+                  <Detail
+                    label="Stocked on"
+                    value={formatDate(data.stockingDate)}
+                    icon={<Calendar className="h-3.5 w-3.5" />}
+                  />
+                  <Detail
+                    label="Days since stocking"
+                    value={formatNumber(data.daysSinceStocking)}
+                  />
+                  <Detail
+                    label="Shrimp count"
+                    value={formatNumber(data.shrimpCount)}
+                  />
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-2 gap-3">
+                <StatCard
+                  label="Today's Feed"
+                  value={formatKg(data.todayFeedKg)}
+                  icon={Wheat}
+                  hint={`${formatNumber(data.todayFeedEntries)} entries`}
+                />
+                <StatCard
+                  label="Medicine Entries"
+                  value={formatNumber(data.medicineEntryCount)}
+                  icon={Pill}
+                />
+              </div>
+
               <FeedSection
                 cycleId={data.activeCycleId}
                 pondId={pondId}
                 canManageSessions={false}
               />
               <MedicineSection cycleId={data.activeCycleId} />
-              <HarvestSection cycleId={data.activeCycleId} />
             </>
           )}
         </>

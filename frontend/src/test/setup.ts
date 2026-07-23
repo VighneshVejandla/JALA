@@ -49,6 +49,12 @@ Element.prototype.setPointerCapture =
 Element.prototype.releasePointerCapture =
   Element.prototype.releasePointerCapture ?? vi.fn();
 
+// Blob URL helpers used by the export "save as" path.
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = vi.fn(() => 'blob:mock');
+  URL.revokeObjectURL = vi.fn();
+}
+
 // --- MSW lifecycle ---
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {

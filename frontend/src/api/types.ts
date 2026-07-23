@@ -314,6 +314,12 @@ export interface CreateFeedEntryRequest {
   remarks?: string;
 }
 
+export interface UpdateFeedEntryRequest {
+  feedSize?: FeedSize;
+  feedQuantityKg?: number;
+  remarks?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Medicines + photos
 // ---------------------------------------------------------------------------
@@ -546,4 +552,24 @@ export interface SiteHarvestAnalyticsResponse {
 export interface MonthlyChartResponse {
   month: number; // 1–12
   value: number;
+}
+
+// ---------------------------------------------------------------------------
+// Global search
+// ---------------------------------------------------------------------------
+
+export interface SearchResultResponse {
+  id: string;
+  type: string;
+  title: string;
+  subtitle: string | null;
+}
+
+export interface GlobalSearchResponse {
+  sites: SearchResultResponse[];
+  ponds: SearchResultResponse[];
+  feedEntries: SearchResultResponse[];
+  medicineEntries: SearchResultResponse[];
+  harvests: SearchResultResponse[];
+  notifications: SearchResultResponse[];
 }

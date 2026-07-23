@@ -23,7 +23,8 @@ export function MonthlyChart({
   color?: string;
 }) {
   const rows = data.map((d) => ({
-    label: MONTHS[(d.month - 1) % 12] ?? String(d.month),
+    // Wrap into 0–11 regardless of the (1-based) month value.
+    label: MONTHS[(((d.month - 1) % 12) + 12) % 12],
     value: d.value,
   }));
 

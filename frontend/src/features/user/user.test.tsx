@@ -21,7 +21,7 @@ describe('UserHome', () => {
     renderWithProviders(<AppRoutes />, { route: '/app', authed: true });
 
     expect(await screen.findByText("Today's Feed")).toBeInTheDocument();
-    expect(screen.getByText("Today's Revenue")).toBeInTheDocument();
+    expect(screen.getByText('Available Feed')).toBeInTheDocument();
     expect(
       screen.getByText(/feed inventory is running low/i),
     ).toBeInTheDocument();
@@ -54,7 +54,11 @@ describe('PondsPage', () => {
     await user.click(card);
 
     expect(await screen.findByText('Current cycle')).toBeInTheDocument();
-    expect(screen.getByText('Last harvest')).toBeInTheDocument();
+    // Workers can record feed but never see harvest.
+    expect(
+      await screen.findByRole('button', { name: /record feed/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Last harvest')).not.toBeInTheDocument();
   });
 
   it('shows an empty state when there are no ponds', async () => {

@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Download, Waves } from 'lucide-react';
-import { toast } from 'sonner';
-import { api } from '@/api/endpoints';
+import { Waves } from 'lucide-react';
 import {
   useHistoryCycles,
   useHistoryFeeds,
@@ -13,7 +10,7 @@ import {
 import { useSelectedSite } from '@/hooks/useSelectedSite';
 import type { ReportFilterRequest } from '@/api/types';
 import { FEED_SIZE_LABELS } from '@/api/types';
-import { saveBlob } from '@/lib/download';
+import { ExportBar } from './ExportBar';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import { EmptyBlock, LoadingBlock } from '@/components/common/StateViews';
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,63 +41,6 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-type ExportKind = 'revenue' | 'feed' | 'medicine';
-
-function ExportBar({ filter }: { filter: ReportFilterRequest | null }) {
-  const exportMut = useMutation({
-    mutationFn: async ({
-      kind,
-      format,
-    }: {
-      kind: ExportKind;
-      format: 'excel' | 'pdf';
-    }) => {
-      if (!filter) throw new Error('Select a site and date range first');
-      const key = `${kind}${format === 'excel' ? 'Excel' : 'Pdf'}` as
-        | 'revenueExcel'
-        | 'revenuePdf'
-        | 'feedExcel'
-        | 'feedPdf'
-        | 'medicineExcel'
-        | 'medicinePdf';
-      const blob = await api.exports[key](filter);
-      const ext = format === 'excel' ? 'xlsx' : 'pdf';
-      saveBlob(blob, `${kind}-report.${ext}`);
-    },
-    onError: (e) =>
-      toast.error(e instanceof Error ? e.message : 'Download failed'),
-  });
-
-  const kinds: ExportKind[] = ['revenue', 'feed', 'medicine'];
-
-  return (
-    <div className="space-y-2">
-      {kinds.map((kind) => (
-        <div key={kind} className="flex items-center gap-2">
-          <span className="w-20 text-sm capitalize text-muted-foreground">
-            {kind}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!filter || exportMut.isPending}
-            onClick={() => exportMut.mutate({ kind, format: 'excel' })}
-          >
-            <Download className="mr-1 h-4 w-4" /> Excel
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!filter || exportMut.isPending}
-            onClick={() => exportMut.mutate({ kind, format: 'pdf' })}
-          >
-            <Download className="mr-1 h-4 w-4" /> PDF
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function HistoryPage() {
   const { sites, siteId, select } = useSelectedSite();

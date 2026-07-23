@@ -13,6 +13,8 @@ import type {
   CreatePondRequest,
   CreateSiteRequest,
   CreateUserRequest,
+  UpdateFeedEntryRequest,
+  UpdateUserRequest,
 } from './types';
 
 export const qk = {
@@ -79,6 +81,20 @@ export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.notifications.markRead(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.notifications });
+      void qc.invalidateQueries({ queryKey: qk.unreadCount });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    // No bulk endpoint on the backend, so mark each unread notification read.
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => api.notifications.markRead(id)));
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.notifications });
       void qc.invalidateQueries({ queryKey: qk.unreadCount });
@@ -198,6 +214,35 @@ export function useSetUserActive() {
   });
 }
 
+export function useUpdateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateUserRequest }) =>
+      api.users.update(id, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.users }),
+  });
+}
+
+export function useUserSites(userId: string | null) {
+  return useQuery({
+    queryKey: userId ? ['users', userId, 'sites'] : ['users', 'sites', 'none'],
+    queryFn: () => api.users.sites(userId as string),
+    enabled: !!userId,
+  });
+}
+
+export function useAssignSite(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ siteId, assign }: { siteId: string; assign: boolean }) =>
+      assign
+        ? api.users.addSite(userId, siteId)
+        : api.users.removeSite(userId, siteId),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ['users', userId, 'sites'] }),
+  });
+}
+
 export function useCreateSite() {
   const qc = useQueryClient();
   return useMutation({
@@ -301,6 +346,16 @@ export function useCreateFeedEntry(date: string) {
   });
 }
 
+export function useUpdateFeedEntry(cycleId: string, date: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateFeedEntryRequest }) =>
+      api.feedEntries.update(id, body),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: qk.feedEntries(cycleId, date) }),
+  });
+}
+
 export function useMedicines(cycleId: string | null) {
   return useQuery({
     queryKey: cycleId ? qk.medicines(cycleId) : ['medicines', 'none'],
@@ -315,6 +370,16 @@ export function useCreateMedicine() {
     mutationFn: (body: CreateMedicineRequest) => api.medicines.create(body),
     onSuccess: (_data, vars) =>
       qc.invalidateQueries({ queryKey: qk.medicines(vars.pondCycleId) }),
+  });
+}
+
+export function useMedicinePhotos(medicineEntryId: string | null) {
+  return useQuery({
+    queryKey: medicineEntryId
+      ? ['medicine-photos', medicineEntryId]
+      : ['medicine-photos', 'none'],
+    queryFn: () => api.medicinePhotos.list(medicineEntryId as string),
+    enabled: !!medicineEntryId,
   });
 }
 
@@ -406,6 +471,15 @@ export function useFeedInventoryList() {
   return useQuery({
     queryKey: ['feed-inventory'],
     queryFn: api.feedInventory.list,
+  });
+}
+
+export function useSearch(keyword: string) {
+  const trimmed = keyword.trim();
+  return useQuery({
+    queryKey: ['search', trimmed],
+    queryFn: () => api.search.query(trimmed),
+    enabled: trimmed.length >= 2,
   });
 }
 

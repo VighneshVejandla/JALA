@@ -35,12 +35,17 @@ describe('PondManage — active cycle workspace', () => {
     expect(await screen.findByText('Buyer Co', { exact: false })).toBeInTheDocument();
   });
 
-  it('converts the cycle to harvested', async () => {
+  it('harvests and closes the cycle in one guided flow', async () => {
     asAdmin();
-    let harvested = false;
+    let harvestRecorded = false;
+    let cycleClosed = false;
     server.use(
+      http.post(`${BASE}/harvests`, () => {
+        harvestRecorded = true;
+        return ok(fx.harvests[0]);
+      }),
       http.patch(`${BASE}/pond-cycles/:id/harvest`, () => {
-        harvested = true;
+        cycleClosed = true;
         return ok(null);
       }),
     );
@@ -48,10 +53,19 @@ describe('PondManage — active cycle workspace', () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole('button', { name: /convert to harvested/i }),
+      await screen.findByRole('button', { name: /harvest & close cycle/i }),
     );
-    await user.click(await screen.findByRole('button', { name: /confirm/i }));
-    await waitFor(() => expect(harvested).toBe(true));
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText(/quantity/i), '300');
+    await user.upload(
+      within(dialog).getByLabelText(/bill photo/i),
+      new File(['x'], 'bill.png', { type: 'image/png' }),
+    );
+    await user.click(
+      within(dialog).getByRole('button', { name: /record harvest & close/i }),
+    );
+    await waitFor(() => expect(harvestRecorded).toBe(true));
+    await waitFor(() => expect(cycleClosed).toBe(true));
   });
 
   it('records a feed amount for a session', async () => {
@@ -185,6 +199,29 @@ describe('PondManage — extra branches', () => {
     );
     await user.click(within(dialog).getByRole('button', { name: /save harvest/i }));
     await waitFor(() => expect(recorded).toBe(true));
+  });
+
+  it('surfaces a harvest record error', async () => {
+    asAdmin();
+    server.use(
+      http.post(`${BASE}/harvests`, () =>
+        HttpResponse.json(
+          { success: false, message: 'Harvest failed', data: null, timestamp: '' },
+          { status: 500 },
+        ),
+      ),
+    );
+    renderWithProviders(<AppRoutes />, { route: ROUTE, authed: true });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /record harvest/i }));
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText(/quantity/i), '300');
+    await user.upload(
+      within(dialog).getByLabelText(/bill photo/i),
+      new File(['x'], 'bill.png', { type: 'image/png' }),
+    );
+    await user.click(within(dialog).getByRole('button', { name: /save harvest/i }));
+    expect(await screen.findByText('Harvest failed')).toBeInTheDocument();
   });
 
   it('requires a bill photo for a harvest', async () => {

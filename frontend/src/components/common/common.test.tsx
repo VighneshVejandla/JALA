@@ -64,6 +64,21 @@ describe('SiteSelector', () => {
   });
 });
 
+describe('MonthlyChart', () => {
+  it('renders without crashing and handles out-of-range months', async () => {
+    const { MonthlyChart } = await import('./MonthlyChart');
+    const { container } = render(
+      <MonthlyChart
+        data={[
+          { month: 1, value: 100 },
+          { month: 13, value: 50 },
+        ]}
+      />,
+    );
+    expect(container).toBeTruthy();
+  });
+});
+
 describe('FullScreenLoader', () => {
   it('renders the label', () => {
     render(<FullScreenLoader label="Please wait" />);

@@ -3,10 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { ImagePlus, Pill, Plus } from 'lucide-react';
+import { ImageIcon, ImagePlus, Pill, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/api/endpoints';
-import { useCreateMedicine, useMedicines } from '@/api/queries';
+import {
+  useCreateMedicine,
+  useMedicinePhotos,
+  useMedicines,
+} from '@/api/queries';
 import type { MedicineUnit } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -192,6 +196,50 @@ function UploadPhotoButton({ medicineEntryId }: { medicineEntryId: string }) {
   );
 }
 
+function ViewPhotosDialog({ medicineEntryId }: { medicineEntryId: string }) {
+  const [open, setOpen] = useState(false);
+  const photos = useMedicinePhotos(open ? medicineEntryId : null);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" aria-label="View photos">
+          <ImageIcon className="mr-1 h-4 w-4" /> Photos
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90svh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Medicine photos</DialogTitle>
+        </DialogHeader>
+        {photos.isLoading && (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        )}
+        {photos.data && photos.data.length === 0 && (
+          <p className="text-sm text-muted-foreground">No photos uploaded yet.</p>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          {photos.data?.map((p) => (
+            <a
+              key={p.id}
+              href={p.filePath}
+              target="_blank"
+              rel="noreferrer"
+              className="overflow-hidden rounded-lg border border-border"
+            >
+              <img
+                src={p.filePath}
+                alt={p.fileName}
+                className="h-32 w-full object-cover"
+                loading="lazy"
+              />
+            </a>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function MedicineSection({ cycleId }: { cycleId: string }) {
   const medicines = useMedicines(cycleId);
 
@@ -224,6 +272,7 @@ export function MedicineSection({ cycleId }: { cycleId: string }) {
                 {m.remarks ? ` · ${m.remarks}` : ''}
               </p>
             </div>
+            <ViewPhotosDialog medicineEntryId={m.id} />
             <UploadPhotoButton medicineEntryId={m.id} />
           </div>
         ))}

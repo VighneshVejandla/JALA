@@ -1,28 +1,30 @@
-import {
-  Bell,
-  Fish,
-  MapPin,
-  PackageOpen,
-  TrendingUp,
-  Waves,
-  Wheat,
-} from 'lucide-react';
-import { useHomeDashboard } from '@/api/queries';
+import { MapPin, PackageOpen, Utensils } from 'lucide-react';
+import { useFeedChart, useHomeDashboard } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import { StatCard } from '@/components/common/StatCard';
+import { MonthlyChart } from '@/components/common/MonthlyChart';
 import {
   EmptyBlock,
   ErrorBlock,
   LoadingBlock,
 } from '@/components/common/StateViews';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatKg, formatNumber } from '@/lib/format';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { formatKg } from '@/lib/format';
 
+/**
+ * Worker home is intentionally feed-focused: today's feed, available feed and
+ * the feed trend. Harvest/revenue/pond-count widgets are admin concerns.
+ */
 export function UserHome() {
   const { sites, siteId, select, isLoading: sitesLoading } = useSelectedSite();
   const { data, isLoading, isError, refetch } = useHomeDashboard(siteId);
+  const feedChart = useFeedChart(siteId);
 
   return (
     <div className="space-y-4">
@@ -37,7 +39,6 @@ export function UserHome() {
       )}
 
       {(sitesLoading || isLoading) && <LoadingBlock label="Loading dashboard…" />}
-
       {isError && (
         <ErrorBlock
           message="Could not load this site's dashboard."
@@ -62,7 +63,7 @@ export function UserHome() {
             <StatCard
               label="Today's Feed"
               value={formatKg(data.todayFeedKg)}
-              icon={Wheat}
+              icon={Utensils}
             />
             <StatCard
               label="Available Feed"
@@ -70,39 +71,18 @@ export function UserHome() {
               icon={PackageOpen}
               tone={data.lowInventory ? 'warning' : 'default'}
             />
-            <StatCard
-              label="Today's Harvest"
-              value={formatKg(data.todayHarvestKg)}
-              icon={Fish}
-              tone="success"
-            />
-            <StatCard
-              label="Today's Revenue"
-              value={formatCurrency(data.todayRevenue)}
-              icon={TrendingUp}
-              tone="success"
-            />
-            <StatCard
-              label="Total Ponds"
-              value={formatNumber(data.totalPonds)}
-              icon={Waves}
-            />
-            <StatCard
-              label="Active Cycles"
-              value={formatNumber(data.activeCycles)}
-              icon={Waves}
-            />
           </div>
 
           <Card>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium">Unread alerts</span>
-              </div>
-              <Badge variant={data.unreadNotifications > 0 ? 'default' : 'secondary'}>
-                {formatNumber(data.unreadNotifications)}
-              </Badge>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Feed trend · last 12 months</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {feedChart.isLoading ? (
+                <LoadingBlock />
+              ) : (
+                <MonthlyChart data={feedChart.data ?? []} color="hsl(199 89% 48%)" />
+              )}
             </CardContent>
           </Card>
         </>

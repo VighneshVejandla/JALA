@@ -112,6 +112,13 @@ export const handlers = [
   http.get(`${BASE}/reports/chart/feed/:siteId`, () => ok(fx.monthlyChart)),
   http.get(`${BASE}/reports/chart/harvest/:siteId`, () => ok(fx.monthlyChart)),
   http.get(`${BASE}/feed-inventory`, () => ok(fx.feedInventoryList)),
+  http.get(`${BASE}/search`, () => ok(fx.globalSearch)),
+  http.get(`${BASE}/medicine-photos`, () => ok(fx.medicinePhotos)),
+  http.get(`${BASE}/users/:id/sites`, () => ok(['site-1'])),
+  http.patch(`${BASE}/users/:id`, () => ok(fx.workerUser)),
+  http.post(`${BASE}/users/:id/sites/:siteId`, () => ok(null)),
+  http.delete(`${BASE}/users/:id/sites/:siteId`, () => ok(null)),
+  http.patch(`${BASE}/feed-entries/:id`, () => ok(fx.feedEntries[0])),
 
   http.get(`${BASE}/history/pond/:pondId/cycles`, () =>
     ok([
