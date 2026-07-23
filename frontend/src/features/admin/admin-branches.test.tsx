@@ -64,14 +64,13 @@ describe('SiteDetail branches', () => {
 });
 
 describe('Pond sections — empty states', () => {
-  it('renders empty feed / medicine / harvest sections', async () => {
+  it('renders empty feed / medicine sections', async () => {
     asAdmin();
     server.use(
       http.get(`${BASE}/analytics/feed/pond/:pondId`, () => err()),
       http.get(`${BASE}/feed-schedules/cycle/:cycleId`, () => ok([])),
       http.get(`${BASE}/feed-entries`, () => ok([])),
       http.get(`${BASE}/medicines`, () => ok([])),
-      http.get(`${BASE}/harvests`, () => ok([])),
     );
     renderWithProviders(<AppRoutes />, {
       route: '/admin/ponds/pond-1',
@@ -83,8 +82,9 @@ describe('Pond sections — empty states', () => {
     expect(
       await screen.findByText(/no medicine recorded/i),
     ).toBeInTheDocument();
+    // Harvest is now recorded via the guided cycle flow, not a section.
     expect(
-      await screen.findByText(/no harvests recorded/i),
+      await screen.findByRole('button', { name: /harvest & close cycle/i }),
     ).toBeInTheDocument();
   });
 

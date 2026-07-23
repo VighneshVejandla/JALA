@@ -2,6 +2,7 @@ package com.jala.backend.harvest.service;
 
 import com.jala.backend.harvest.dto.request.CancelHarvestRequest;
 import com.jala.backend.harvest.dto.request.CreateHarvestRequest;
+import com.jala.backend.harvest.dto.request.UpdateHarvestRequest;
 import com.jala.backend.harvest.dto.response.HarvestResponse;
 
 import java.util.List;
@@ -11,6 +12,10 @@ public interface HarvestService {
 
     HarvestResponse createHarvest(
             CreateHarvestRequest request);
+
+    HarvestResponse updateHarvest(
+            UUID harvestId,
+            UpdateHarvestRequest request);
 
     List<HarvestResponse> getHarvests(
             UUID pondCycleId,

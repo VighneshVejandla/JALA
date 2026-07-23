@@ -7,6 +7,7 @@ export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
     me: '/auth/me',
+    password: '/auth/password',
   },
   roles: {
     base: '/roles',
@@ -16,6 +17,7 @@ export const ENDPOINTS = {
     byId: (id: string) => `/users/${id}`,
     activate: (id: string) => `/users/${id}/activate`,
     deactivate: (id: string) => `/users/${id}/deactivate`,
+    password: (id: string) => `/users/${id}/password`,
     sites: (id: string) => `/users/${id}/sites`,
     site: (id: string, siteId: string) => `/users/${id}/sites/${siteId}`,
   },
@@ -64,6 +66,7 @@ export const ENDPOINTS = {
   },
   harvests: {
     base: '/harvests',
+    byId: (id: string) => `/harvests/${id}`,
     cancel: (id: string) => `/harvests/${id}/cancel`,
   },
   history: {

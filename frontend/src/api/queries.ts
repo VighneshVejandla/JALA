@@ -13,7 +13,12 @@ import type {
   CreatePondRequest,
   CreateSiteRequest,
   CreateUserRequest,
+  ChangePasswordRequest,
+  ResetPasswordRequest,
   UpdateFeedEntryRequest,
+  UpdateHarvestRequest,
+  UpdatePondRequest,
+  UpdateProfileRequest,
   UpdateUserRequest,
 } from './types';
 
@@ -471,6 +476,72 @@ export function useFeedInventoryList() {
   return useQuery({
     queryKey: ['feed-inventory'],
     queryFn: api.feedInventory.list,
+  });
+}
+
+export function useUpdateProfile() {
+  return useMutation({
+    mutationFn: (body: UpdateProfileRequest) => api.auth.updateProfile(body),
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (body: ChangePasswordRequest) => api.auth.changePassword(body),
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: ResetPasswordRequest }) =>
+      api.users.resetPassword(id, body),
+  });
+}
+
+export function useUpdatePond(siteId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdatePondRequest }) =>
+      api.ponds.update(id, body),
+    onSuccess: (_d, vars) => {
+      void qc.invalidateQueries({ queryKey: qk.pondsBySite(siteId) });
+      void qc.invalidateQueries({ queryKey: ['ponds', vars.id] });
+    },
+  });
+}
+
+export function useUpdateHarvest(pondId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateHarvestRequest }) =>
+      api.harvests.update(id, body),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: qk.history(pondId, 'harvests') }),
+  });
+}
+
+export function useCancelHarvest(pondId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      api.harvests.cancel(id, { cancellationReason: reason }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.history(pondId, 'harvests') });
+      void qc.invalidateQueries({ queryKey: qk.cyclesByPond(pondId) });
+      void qc.invalidateQueries({ queryKey: qk.activeCycle(pondId) });
+    },
+  });
+}
+
+export function useUndoHarvestCycle(pondId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cycleId: string) => api.pondCycles.undoHarvest(cycleId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.activeCycle(pondId) });
+      void qc.invalidateQueries({ queryKey: qk.cyclesByPond(pondId) });
+      void qc.invalidateQueries({ queryKey: qk.pond(pondId) });
+    },
   });
 }
 

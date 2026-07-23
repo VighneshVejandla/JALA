@@ -2,6 +2,7 @@ import { del, get, patch, post, postBlob, postForm } from './client';
 import { ENDPOINTS } from '@/constants/endpoints';
 import type {
   AddSiteDeliveryRequest,
+  ChangePasswordRequest,
   CreateFeedEntryRequest,
   CreateFeedScheduleRequest,
   CreateMedicineRequest,
@@ -35,13 +36,17 @@ import type {
   PondResponse,
   PondTimelineResponse,
   ReportFilterRequest,
+  ResetPasswordRequest,
   RoleResponse,
-  UpdateFeedEntryRequest,
   SiteDeliveryReceiptResponse,
   SiteDeliveryResponse,
   SiteFeedAnalyticsResponse,
   SiteHarvestAnalyticsResponse,
   SiteResponse,
+  UpdateFeedEntryRequest,
+  UpdateHarvestRequest,
+  UpdatePondRequest,
+  UpdateProfileRequest,
   UpdateUserRequest,
   UserResponse,
 } from './types';
@@ -52,6 +57,10 @@ export const api = {
     login: (body: LoginRequest) =>
       post<LoginResponse>(ENDPOINTS.auth.login, body),
     me: () => get<UserResponse>(ENDPOINTS.auth.me),
+    updateProfile: (body: UpdateProfileRequest) =>
+      patch<UserResponse>(ENDPOINTS.auth.me, body),
+    changePassword: (body: ChangePasswordRequest) =>
+      patch<void>(ENDPOINTS.auth.password, body),
   },
 
   roles: {
@@ -66,6 +75,8 @@ export const api = {
       patch<UserResponse>(ENDPOINTS.users.byId(id), body),
     activate: (id: string) => patch<void>(ENDPOINTS.users.activate(id)),
     deactivate: (id: string) => patch<void>(ENDPOINTS.users.deactivate(id)),
+    resetPassword: (id: string, body: ResetPasswordRequest) =>
+      patch<void>(ENDPOINTS.users.password(id), body),
     sites: (id: string) => get<string[]>(ENDPOINTS.users.sites(id)),
     addSite: (id: string, siteId: string) =>
       post<void>(ENDPOINTS.users.site(id, siteId)),
@@ -89,6 +100,8 @@ export const api = {
     byId: (id: string) => get<PondResponse>(ENDPOINTS.ponds.byId(id)),
     create: (body: CreatePondRequest) =>
       post<PondResponse>(ENDPOINTS.ponds.base, body),
+    update: (id: string, body: UpdatePondRequest) =>
+      patch<PondResponse>(ENDPOINTS.ponds.byId(id), body),
     activate: (id: string) => patch<void>(ENDPOINTS.ponds.activate(id)),
     deactivate: (id: string) => patch<void>(ENDPOINTS.ponds.deactivate(id)),
   },
@@ -145,6 +158,10 @@ export const api = {
       get<HarvestResponse[]>(ENDPOINTS.harvests.base, { pondCycleId }),
     create: (form: FormData) =>
       postForm<HarvestResponse>(ENDPOINTS.harvests.base, form),
+    update: (id: string, body: UpdateHarvestRequest) =>
+      patch<HarvestResponse>(ENDPOINTS.harvests.byId(id), body),
+    cancel: (id: string, body: { cancellationReason: string }) =>
+      patch<HarvestResponse>(ENDPOINTS.harvests.cancel(id), body),
   },
 
   history: {

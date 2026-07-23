@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { CycleSection } from './CycleSection';
 import { FeedSection } from './FeedSection';
 import { MedicineSection } from './MedicineSection';
-import { HarvestSection } from './HarvestSection';
+import { PondEditButton } from './PondEditButton';
 
 /**
- * Admin pond workspace: manage the active cycle, feed sessions & entries,
- * medicine usage & photos, and the harvest lifecycle.
+ * Admin pond workspace: edit the pond, manage the active cycle (recording a
+ * harvest closes it), feed sessions & entries, and medicine usage & photos.
+ * Past harvests live on the Harvested and History pages.
  */
 export function PondManage() {
   const { pondId } = useParams<{ pondId: string }>();
@@ -30,11 +31,14 @@ export function PondManage() {
       {pond.isLoading && <LoadingBlock label="Loading pond…" />}
 
       {pond.data && (
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{pond.data.pondName}</h2>
-          <p className="text-sm text-muted-foreground">
-            {pond.data.pondCode} · {pond.data.siteName}
-          </p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold">{pond.data.pondName}</h2>
+            <p className="text-sm text-muted-foreground">
+              {pond.data.pondCode} · {pond.data.siteName}
+            </p>
+          </div>
+          <PondEditButton pond={pond.data} />
         </div>
       )}
 
@@ -50,7 +54,6 @@ export function PondManage() {
         <>
           <FeedSection cycleId={activeCycle.id} pondId={pondId!} />
           <MedicineSection cycleId={activeCycle.id} />
-          <HarvestSection cycleId={activeCycle.id} />
         </>
       )}
     </div>

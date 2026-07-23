@@ -253,6 +253,37 @@ export interface CreatePondRequest {
   pondAcres: number;
 }
 
+export interface UpdatePondRequest {
+  pondCode?: string;
+  pondName?: string;
+  pondAcres?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateProfileRequest {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordRequest {
+  newPassword: string;
+}
+
+export interface UpdateHarvestRequest {
+  harvestDate?: string;
+  harvestQuantityKg?: number;
+  buyerName?: string;
+  sellingPricePerKg?: number;
+  vehicleNumber?: string;
+  remarks?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Pond cycles
 // ---------------------------------------------------------------------------

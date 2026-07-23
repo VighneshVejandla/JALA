@@ -166,4 +166,58 @@ class AuthControllerTest extends WebSliceTestBase {
 
         then(authService).should().getCurrentUser("EMP-001");
     }
+
+    @Test
+    @WithMockUser(username = "EMP-001", roles = "WORKER")
+    @DisplayName("PATCH /me updates the authenticated user's profile")
+    void updateProfile_ok() throws Exception {
+
+        given(authService.updateProfile(
+                org.mockito.ArgumentMatchers.eq("EMP-001"),
+                any(com.jala.backend.auth.dto.UpdateProfileRequest.class)))
+                .willReturn(userResponse());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request
+                        .MockMvcRequestBuilders.patch("/api/v1/auth/me")
+                        .with(org.springframework.security.test.web.servlet
+                                .request.SecurityMockMvcRequestPostProcessors.csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"New Name\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Profile updated successfully"));
+    }
+
+    @Test
+    @WithMockUser(username = "EMP-001", roles = "WORKER")
+    @DisplayName("PATCH /password changes the authenticated user's password")
+    void changePassword_ok() throws Exception {
+
+        mockMvc.perform(org.springframework.test.web.servlet.request
+                        .MockMvcRequestBuilders.patch("/api/v1/auth/password")
+                        .with(org.springframework.security.test.web.servlet
+                                .request.SecurityMockMvcRequestPostProcessors.csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"old-password-1\","
+                                + "\"newPassword\":\"new-password-123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password changed successfully"));
+
+        then(authService).should().changePassword(
+                org.mockito.ArgumentMatchers.eq("EMP-001"),
+                any(com.jala.backend.auth.dto.ChangePasswordRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "EMP-001", roles = "WORKER")
+    @DisplayName("PATCH /password with a weak new password is rejected")
+    void changePassword_weak_badRequest() throws Exception {
+
+        mockMvc.perform(org.springframework.test.web.servlet.request
+                        .MockMvcRequestBuilders.patch("/api/v1/auth/password")
+                        .with(org.springframework.security.test.web.servlet
+                                .request.SecurityMockMvcRequestPostProcessors.csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"old\",\"newPassword\":\"short\"}"))
+                .andExpect(status().isBadRequest());
+    }
 }

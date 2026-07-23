@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, Pencil, Plus, UserRound } from 'lucide-react';
+import { KeyRound, MapPin, Pencil, Plus, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useAssignSite,
   useCreateUser,
+  useResetPassword,
   useRoles,
   useSetUserActive,
   useSites,
@@ -393,6 +394,70 @@ function ManageSitesDialog({ user }: { user: UserResponse }) {
   );
 }
 
+const resetSchema = z.object({
+  newPassword: z
+    .string()
+    .min(12, 'At least 12 characters')
+    .regex(/[A-Za-z]/, 'Must contain a letter')
+    .regex(/\d/, 'Must contain a digit'),
+});
+type ResetValues = z.infer<typeof resetSchema>;
+
+function ResetPasswordDialog({ user }: { user: UserResponse }) {
+  const [open, setOpen] = useState(false);
+  const reset = useResetPassword();
+  const form = useForm<ResetValues>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: { newPassword: '' },
+  });
+
+  const onSubmit = async (v: ResetValues) => {
+    try {
+      await reset.mutateAsync({ id: user.id, body: { newPassword: v.newPassword } });
+      toast.success('Password reset');
+      form.reset();
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not reset password');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={`Reset password for ${user.fullName}`}>
+          <KeyRound className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reset password — {user.fullName}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="newPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New temporary password</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="min 12 chars" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={reset.isPending}>
+              {reset.isPending ? 'Resetting…' : 'Reset password'}
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function UsersPage() {
   const { data, isLoading, isError, refetch } = useUsers();
   const setActive = useSetUserActive();
@@ -462,6 +527,7 @@ export function UsersPage() {
                 <div className="flex items-center">
                   <EditUserDialog user={u} />
                   <ManageSitesDialog user={u} />
+                  <ResetPasswordDialog user={u} />
                 </div>
               </div>
             </CardContent>

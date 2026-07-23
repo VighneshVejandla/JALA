@@ -433,4 +433,28 @@ class UserControllerTest extends WebSliceTestBase {
         mockMvc.perform(get("/api/v1/users/{id}/sites", UUID.randomUUID()))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("admin resets a user's password")
+    void resetPassword_ok() throws Exception {
+        UUID id = UUID.randomUUID();
+        mockMvc.perform(patch("/api/v1/users/{id}/password", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"new-password-123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password reset successfully"));
+
+        then(userService).should().resetPassword(eq(id), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "WORKER")
+    @DisplayName("worker cannot reset a password")
+    void resetPassword_worker_forbidden() throws Exception {
+        mockMvc.perform(patch("/api/v1/users/{id}/password", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"new-password-123\"}"))
+                .andExpect(status().isForbidden());
+    }
 }

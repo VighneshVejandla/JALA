@@ -4,11 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Play, Sprout } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  useCreateCycle,
-  useCreateHarvest,
-  useHarvestCycle,
-} from '@/api/queries';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCreateCycle, useCreateHarvest, qk } from '@/api/queries';
 import type { PondCycleResponse, ShrimpSpecies } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -172,8 +169,8 @@ function HarvestAndCloseDialog({
 }) {
   const [open, setOpen] = useState(false);
   const createHarvest = useCreateHarvest(cycle.id);
-  const harvestCycle = useHarvestCycle(pondId);
-  const pending = createHarvest.isPending || harvestCycle.isPending;
+  const qc = useQueryClient();
+  const pending = createHarvest.isPending;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -195,10 +192,16 @@ function HarvestAndCloseDialog({
           pending={pending}
           onSubmit={async (fd) => {
             try {
+              // Recording a harvest closes the cycle and opens the next one
+              // (handled server-side), so just refresh the cycle views.
               await createHarvest.mutateAsync(fd);
-              await harvestCycle.mutateAsync(cycle.id);
+              await Promise.all([
+                qc.invalidateQueries({ queryKey: qk.activeCycle(pondId) }),
+                qc.invalidateQueries({ queryKey: qk.cyclesByPond(pondId) }),
+                qc.invalidateQueries({ queryKey: qk.pond(pondId) }),
+              ]);
               toast.success('Harvest recorded and cycle closed', {
-                description: 'Start a new cycle for this pond when ready.',
+                description: 'A new cycle is ready for this pond.',
               });
               setOpen(false);
             } catch (err) {

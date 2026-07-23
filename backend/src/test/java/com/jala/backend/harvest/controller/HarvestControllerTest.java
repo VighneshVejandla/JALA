@@ -13,9 +13,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.List;
 import java.util.UUID;
 
+import com.jala.backend.harvest.dto.response.HarvestResponse;
+import org.springframework.http.MediaType;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = HarvestController.class)
@@ -41,5 +47,20 @@ class HarvestControllerTest extends WebSliceTestBase {
         mockMvc.perform(get("/api/v1/harvests")
                         .param("pondCycleId", UUID.randomUUID().toString()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("admin edits a harvest")
+    void update_ok() throws Exception {
+        UUID id = UUID.randomUUID();
+        HarvestResponse resp = new HarvestResponse();
+        resp.setId(id);
+        given(harvestService.updateHarvest(eq(id), any())).willReturn(resp);
+        mockMvc.perform(patch("/api/v1/harvests/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"harvestQuantityKg\":320,\"buyerName\":\"Acme\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Harvest updated successfully"));
     }
 }
