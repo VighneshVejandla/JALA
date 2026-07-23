@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private static final String USER_NOT_FOUND = "User not found";
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
@@ -39,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         return userMapper.toResponse(user);
     }
@@ -51,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
@@ -73,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException(USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(
                 request.getCurrentPassword(), user.getPasswordHash())) {

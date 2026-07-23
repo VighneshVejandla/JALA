@@ -47,7 +47,9 @@ class NotificationControllerTest extends WebSliceTestBase {
         given(notificationService.getNotifications(any(), any()))
                 .willReturn(NotificationSummaryResponse.builder().build());
         mockMvc.perform(get("/api/v1/notifications"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result
+                        .MockMvcResultMatchers.jsonPath("$.success").value(true));
     }
 
     @Test

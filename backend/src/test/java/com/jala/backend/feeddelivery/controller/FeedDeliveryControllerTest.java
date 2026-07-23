@@ -48,7 +48,9 @@ class FeedDeliveryControllerTest extends WebSliceTestBase {
         given(feedDeliveryService.getAllDeliveries(any(), any()))
                 .willReturn(List.of());
         mockMvc.perform(get("/api/v1/feed-deliveries"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result
+                        .MockMvcResultMatchers.jsonPath("$.success").value(true));
     }
 
     @Test

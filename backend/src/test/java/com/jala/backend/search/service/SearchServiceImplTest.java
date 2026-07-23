@@ -56,6 +56,9 @@ class SearchServiceImplTest {
     @Mock
     private SiteAccessService siteAccessService;
 
+    @Mock
+    private com.jala.backend.user.repository.UserRepository userRepository;
+
     @InjectMocks
     private SearchServiceImpl service;
 
@@ -141,5 +144,53 @@ class SearchServiceImplTest {
 
         assertThat(result.getSites()).hasSize(1);
         assertThat(result.getPonds()).hasSize(1);
+    }
+
+    private void stubEmptyDomainSearches() {
+        when(siteRepository.search(any(), any())).thenReturn(List.of());
+        when(pondRepository.search(any(), any())).thenReturn(List.of());
+        when(feedEntryRepository.search(any(), any())).thenReturn(List.of());
+        when(medicineRepository.search(any(), any())).thenReturn(List.of());
+        when(harvestRepository.search(any(), any())).thenReturn(List.of());
+        when(notificationRepository.search(any(), any())).thenReturn(List.of());
+    }
+
+    @Test
+    @DisplayName("admins get user results; the directory is included")
+    void search_includesUsersForAdmin() {
+        var auth = new org.springframework.security.authentication
+                .UsernamePasswordAuthenticationToken(
+                "admin", "x",
+                java.util.List.of(new org.springframework.security.core.authority
+                        .SimpleGrantedAuthority("ROLE_ADMIN")));
+        org.springframework.security.core.context.SecurityContextHolder
+                .getContext().setAuthentication(auth);
+        try {
+            stubEmptyDomainSearches();
+            when(userRepository.search(any(), any()))
+                    .thenReturn(java.util.List.of(
+                            com.jala.backend.user.entity.User.builder()
+                                    .id(UUID.randomUUID())
+                                    .fullName("Ada Admin")
+                                    .employeeCode("EMP-ADMIN")
+                                    .build()));
+
+            GlobalSearchResponse result = service.search("ada");
+
+            assertThat(result.getUsers()).hasSize(1);
+            assertThat(result.getUsers().get(0).getTitle()).isEqualTo("Ada Admin");
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder
+                    .clearContext();
+        }
+    }
+
+    @Test
+    @DisplayName("non-admins get no user results")
+    void search_noUsersForNonAdmin() {
+        // No authentication in context → user directory is withheld.
+        stubEmptyDomainSearches();
+        GlobalSearchResponse result = service.search("ada");
+        assertThat(result.getUsers()).isEmpty();
     }
 }

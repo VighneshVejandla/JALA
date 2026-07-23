@@ -268,4 +268,22 @@ class AnalyticsServiceImplTest {
         assertThat(result.getInventory()).isNotNull();
         assertThat(result.getHarvest()).isNotNull();
     }
+
+    @Test
+    @DisplayName("getSiteFeedDaily returns a zero-filled series ending today")
+    void getSiteFeedDaily_zeroFills() {
+        java.time.LocalDate today =
+                com.jala.backend.common.util.DateTimeUtil.today();
+        when(feedEntryRepository.sumFeedKgByDay(eq(site.getId()), any()))
+                .thenReturn(java.util.List.<Object[]>of(
+                        new Object[]{today, new java.math.BigDecimal("50")}));
+
+        var series = service.getSiteFeedDaily(site.getId(), 14);
+
+        assertThat(series).hasSize(14);
+        assertThat(series.get(13).getDate()).isEqualTo(today);
+        assertThat(series.get(13).getFeedKg()).isEqualByComparingTo("50");
+        assertThat(series.get(0).getFeedKg()).isEqualByComparingTo("0");
+        verify(siteAccessService).checkSiteAccess(site.getId());
+    }
 }

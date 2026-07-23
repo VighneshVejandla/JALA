@@ -681,4 +681,31 @@ class UserServiceImplTest {
         assertThat(userService.getAssignedSiteIds(userId))
                 .isSameAs(siteIds);
     }
+
+    @Test
+    @DisplayName("resetPassword re-encodes and saves")
+    void resetPassword_success() {
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("new-password-123")).thenReturn("new-hash");
+
+        var req = new com.jala.backend.user.dto.request.ResetPasswordRequest();
+        req.setNewPassword("new-password-123");
+
+        userService.resetPassword(user.getId(), req);
+
+        assertThat(user.getPasswordHash()).isEqualTo("new-hash");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("resetPassword rejects an unknown user")
+    void resetPassword_notFound() {
+        UUID id = UUID.randomUUID();
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+        var req = new com.jala.backend.user.dto.request.ResetPasswordRequest();
+        req.setNewPassword("new-password-123");
+        assertThatThrownBy(() -> userService.resetPassword(id, req))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

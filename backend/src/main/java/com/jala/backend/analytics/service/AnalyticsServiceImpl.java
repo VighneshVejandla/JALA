@@ -440,7 +440,7 @@ public class AnalyticsServiceImpl
 
         siteAccessService.checkSiteAccess(siteId);
 
-        int span = Math.max(1, Math.min(days, 90));
+        int span = Math.clamp(days, 1, 90);
         LocalDate today = DateTimeUtil.today();
         LocalDate from = today.minusDays(span - 1L);
 
