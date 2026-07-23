@@ -138,6 +138,8 @@ export const api = {
       patch<FeedEntryResponse>(ENDPOINTS.feedEntries.byId(id), body),
     cancel: (id: string, body: { reason: string }) =>
       patch<FeedEntryResponse>(ENDPOINTS.feedEntries.cancel(id), body),
+    restore: (id: string) =>
+      patch<FeedEntryResponse>(ENDPOINTS.feedEntries.restore(id)),
   },
 
   medicines: {
@@ -147,6 +149,8 @@ export const api = {
       post<MedicineResponse>(ENDPOINTS.medicines.base, body),
     cancel: (id: string, body: { reason: string }) =>
       patch<MedicineResponse>(ENDPOINTS.medicines.cancel(id), body),
+    restore: (id: string) =>
+      patch<MedicineResponse>(ENDPOINTS.medicines.restore(id)),
   },
 
   medicinePhotos: {

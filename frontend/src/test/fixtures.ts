@@ -441,6 +441,7 @@ export const harvestHistory: HarvestHistoryResponse[] = [
     buyerName: 'Buyer Co',
     sellingPricePerKg: 152,
     totalAmount: 38000,
+    billPhotoPath: 'https://example.test/bill-1.jpg',
     status: 'ACTIVE',
   },
 ];

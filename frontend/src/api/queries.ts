@@ -572,6 +572,23 @@ export function useUndoHarvestCycle(pondId: string) {
   });
 }
 
+export function useRestoreHistoryEntry(pondId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, kind }: { id: string; kind: 'feed' | 'medicine' }) => {
+      if (kind === 'feed') {
+        await api.feedEntries.restore(id);
+      } else {
+        await api.medicines.restore(id);
+      }
+    },
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({
+        queryKey: qk.history(pondId, vars.kind === 'feed' ? 'feeds' : 'medicines'),
+      }),
+  });
+}
+
 export function useSearch(keyword: string) {
   const trimmed = keyword.trim();
   return useQuery({

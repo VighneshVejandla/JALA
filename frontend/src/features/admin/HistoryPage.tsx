@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Waves } from 'lucide-react';
+import { RotateCcw, Waves } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   useHistoryCycles,
   useHistoryFeeds,
   useHistoryHarvests,
   useHistoryMedicines,
   usePondsBySite,
+  useRestoreHistoryEntry,
 } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
 import type { ReportFilterRequest } from '@/api/types';
@@ -41,6 +43,36 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Restore control for a cancelled feed/medicine history row. */
+function RestoreButton({
+  id,
+  kind,
+  pondId,
+}: {
+  id: string;
+  kind: 'feed' | 'medicine';
+  pondId: string;
+}) {
+  const restore = useRestoreHistoryEntry(pondId);
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      disabled={restore.isPending}
+      onClick={() =>
+        restore.mutate(
+          { id, kind },
+          {
+            onSuccess: () => toast.success('Restored'),
+            onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed'),
+          },
+        )
+      }
+    >
+      <RotateCcw className="mr-1 h-4 w-4" /> Restore
+    </Button>
+  );
+}
 
 export function HistoryPage() {
   const { sites, siteId, select } = useSelectedSite();
@@ -152,12 +184,21 @@ export function HistoryPage() {
             {feeds.data?.length === 0 && <p className="text-sm text-muted-foreground">No feed history.</p>}
             {feeds.data?.map((f) => (
               <Card key={f.feedEntryId}>
-                <CardContent className="flex items-center justify-between p-3 text-sm">
-                  <span>
+                <CardContent className="flex items-center justify-between gap-2 p-3 text-sm">
+                  <span className="min-w-0 flex-1 truncate">
                     {formatDate(f.feedDate)} · session {f.sessionNumber} · size{' '}
                     {FEED_SIZE_LABELS[f.feedSize]}
                   </span>
-                  <span className="font-medium">{formatKg(f.feedQuantityKg)}</span>
+                  {f.status === 'CANCELLED' ? (
+                    <>
+                      <Badge variant="secondary">Cancelled</Badge>
+                      {pondId && (
+                        <RestoreButton id={f.feedEntryId} kind="feed" pondId={pondId} />
+                      )}
+                    </>
+                  ) : (
+                    <span className="font-medium">{formatKg(f.feedQuantityKg)}</span>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -169,13 +210,27 @@ export function HistoryPage() {
             {medicines.data?.map((m) => (
               <Card key={m.medicineId}>
                 <CardContent className="p-3 text-sm">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">
                       {m.quantity} {m.unit}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(m.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {m.status === 'CANCELLED' && (
+                        <>
+                          <Badge variant="secondary">Cancelled</Badge>
+                          {pondId && (
+                            <RestoreButton
+                              id={m.medicineId}
+                              kind="medicine"
+                              pondId={pondId}
+                            />
+                          )}
+                        </>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(m.createdAt)}
+                      </span>
+                    </div>
                   </div>
                   {m.photos.length > 0 && (
                     <p className="mt-1 text-xs text-muted-foreground">

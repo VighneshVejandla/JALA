@@ -434,6 +434,7 @@ export interface HarvestHistoryResponse {
   buyerName: string | null;
   sellingPricePerKg: number | null;
   totalAmount: number | null;
+  billPhotoPath: string | null;
   status: HarvestStatus;
 }
 

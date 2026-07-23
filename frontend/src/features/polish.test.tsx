@@ -78,6 +78,88 @@ describe('Harvested pagination', () => {
   });
 });
 
+describe('history restore (cancelled feed/medicine)', () => {
+  it('restores a cancelled feed entry', async () => {
+    asAdmin();
+    let restored = false;
+    server.use(
+      http.get(`${BASE}/history/pond/:pondId/feeds`, () =>
+        ok([
+          {
+            feedEntryId: 'fe-x',
+            cycleNumber: 3,
+            sessionNumber: 1,
+            feedDate: '2026-07-10',
+            feedSize: 'ONE',
+            feedQuantityKg: 12,
+            remarks: null,
+            status: 'CANCELLED',
+            createdBy: 'EMP-1',
+          },
+        ]),
+      ),
+      http.patch(`${BASE}/feed-entries/:id/restore`, () => {
+        restored = true;
+        return ok(fx.feedEntries[0]);
+      }),
+    );
+    renderWithProviders(<AppRoutes />, { route: '/admin/history', authed: true });
+    const user = userEvent.setup();
+    const combos = await screen.findAllByRole('combobox');
+    await user.click(combos[combos.length - 1]);
+    await user.click(await screen.findByRole('option', { name: /Pond One/i }));
+    await user.click(await screen.findByRole('tab', { name: /feeds/i }));
+    await user.click(await screen.findByRole('button', { name: /restore/i }));
+    await waitFor(() => expect(restored).toBe(true));
+  });
+
+  it('restores a cancelled medicine record', async () => {
+    asAdmin();
+    let restored = false;
+    server.use(
+      http.get(`${BASE}/history/pond/:pondId/medicines`, () =>
+        ok([
+          {
+            medicineId: 'med-x',
+            cycleNumber: 3,
+            quantity: 5,
+            unit: 'ML',
+            remarks: null,
+            status: 'CANCELLED',
+            createdBy: 'EMP-1',
+            createdAt: '2026-07-10T09:00:00',
+            photos: [],
+          },
+        ]),
+      ),
+      http.patch(`${BASE}/medicines/:id/restore`, () => {
+        restored = true;
+        return ok(fx.medicines[0]);
+      }),
+    );
+    renderWithProviders(<AppRoutes />, { route: '/admin/history', authed: true });
+    const user = userEvent.setup();
+    const combos = await screen.findAllByRole('combobox');
+    await user.click(combos[combos.length - 1]);
+    await user.click(await screen.findByRole('option', { name: /Pond One/i }));
+    await user.click(await screen.findByRole('tab', { name: /medicine/i }));
+    await user.click(await screen.findByRole('button', { name: /restore/i }));
+    await waitFor(() => expect(restored).toBe(true));
+  });
+});
+
+describe('harvested bill link', () => {
+  it('shows a View bill link when a bill photo exists', async () => {
+    asAdmin();
+    renderWithProviders(<AppRoutes />, { route: '/admin/harvested', authed: true });
+    const user = userEvent.setup();
+    const combos = await screen.findAllByRole('combobox');
+    await user.click(combos[combos.length - 1]);
+    await user.click(await screen.findByRole('option', { name: /Pond One/i }));
+    expect(await screen.findByRole('link', { name: /view bill/i })).toBeInTheDocument();
+  });
+});
+
 describe('skeletons', () => {
   it('shows a skeleton placeholder while sites load', async () => {
     asAdmin();

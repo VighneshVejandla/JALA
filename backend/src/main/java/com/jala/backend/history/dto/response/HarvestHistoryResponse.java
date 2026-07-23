@@ -26,5 +26,7 @@ public class HarvestHistoryResponse {
 
     private BigDecimal totalAmount;
 
+    private String billPhotoPath;
+
     private HarvestStatus status;
 }

@@ -59,6 +59,16 @@ public class SiteDeliveryReceiptServiceImpl
 
         siteAccessService.checkSiteAccess(site.getId());
 
+        // Receipts may only be uploaded within 6 hours of the delivery.
+        var feedDelivery = siteDelivery.getFeedDelivery();
+        java.time.LocalDateTime deliveredAt =
+                feedDelivery == null ? null : feedDelivery.getDeliveredAt();
+        if (deliveredAt != null
+                && DateTimeUtil.now().isAfter(deliveredAt.plusHours(6))) {
+            throw new com.jala.backend.common.exception.BadRequestException(
+                    "Receipt upload window (6 hours) has closed.");
+        }
+
         String extension =
                 FileValidationUtil.extractExtension(
                         request.getFile().getOriginalFilename());

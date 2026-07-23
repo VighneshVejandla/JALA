@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Fish, IndianRupee, Pencil, Scale, Waves, XCircle } from 'lucide-react';
+import { Fish, IndianRupee, Pencil, Receipt, Scale, Waves, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useCancelHarvest,
@@ -321,6 +321,16 @@ export function HarvestedPage() {
                     Cycle #{h.cycleNumber} · {formatDate(h.harvestDate)}
                     {h.buyerName ? ` · ${h.buyerName}` : ''}
                   </p>
+                  {h.billPhotoPath && (
+                    <a
+                      href={h.billPhotoPath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    >
+                      <Receipt className="h-3.5 w-3.5" /> View bill
+                    </a>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <p className="font-semibold">{formatCurrency(h.totalAmount)}</p>
