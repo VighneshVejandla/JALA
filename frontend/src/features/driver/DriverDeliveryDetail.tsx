@@ -138,7 +138,13 @@ function AddDropDialog({ deliveryId }: { deliveryId: string }) {
   );
 }
 
-function DropRow({ drop }: { drop: SiteDeliveryResponse }) {
+function DropRow({
+  drop,
+  locked,
+}: {
+  drop: SiteDeliveryResponse;
+  locked: boolean;
+}) {
   const receipts = useDeliveryReceipts(drop.id);
   const upload = useUploadReceipt(drop.id);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -178,21 +184,22 @@ function DropRow({ drop }: { drop: SiteDeliveryResponse }) {
           type="file"
           accept="image/*"
           className="hidden"
+          disabled={locked}
           aria-label={`Receipt for ${drop.siteName}`}
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) onFile(file);
+            if (file && !locked) onFile(file);
             e.target.value = '';
           }}
         />
         <Button
           variant="ghost"
           size="sm"
-          disabled={upload.isPending}
+          disabled={upload.isPending || locked}
           onClick={() => inputRef.current?.click()}
         >
           <ImagePlus className="mr-1 h-4 w-4" />
-          {upload.isPending ? 'Uploading…' : 'Receipt'}
+          {locked ? 'Locked' : upload.isPending ? 'Uploading…' : 'Receipt'}
         </Button>
       </CardContent>
     </Card>
@@ -204,6 +211,12 @@ export function DriverDeliveryDetail() {
   const navigate = useNavigate();
   const delivery = useDelivery(id ?? null);
   const sites = useDeliverySites(id ?? null);
+
+  // Receipts are editable for 6 hours after the delivery, then locked.
+  const deliveredAt = delivery.data?.deliveredAt;
+  const locked = deliveredAt
+    ? Date.now() - new Date(deliveredAt).getTime() > 6 * 60 * 60 * 1000
+    : false;
 
   return (
     <div className="space-y-4">
@@ -251,7 +264,7 @@ export function DriverDeliveryDetail() {
 
       <div className="space-y-3">
         {sites.data?.map((drop) => (
-          <DropRow key={drop.id} drop={drop} />
+          <DropRow key={drop.id} drop={drop} locked={locked} />
         ))}
       </div>
     </div>

@@ -2,9 +2,21 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Clock, Pencil, Plus, Trash2, Utensils } from 'lucide-react';
+import { Clock, Pencil, Plus, Trash2, Utensils, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  useCancelFeedEntry,
   useCreateFeedEntry,
   useCreateFeedSchedule,
   useFeedAnalytics,
@@ -402,6 +414,52 @@ function EditFeedEntryDialog({
   );
 }
 
+function CancelFeedEntryButton({
+  entryId,
+  cycleId,
+  date,
+}: {
+  entryId: string;
+  cycleId: string;
+  date: string;
+}) {
+  const cancel = useCancelFeedEntry(cycleId, date);
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Cancel feed entry">
+          <XCircle className="h-4 w-4 text-destructive" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel this feed entry?</AlertDialogTitle>
+          <AlertDialogDescription>
+            It will be voided and removed from today's entries.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() =>
+              cancel.mutate(
+                { id: entryId, reason: 'Cancelled by admin' },
+                {
+                  onSuccess: () => toast.success('Feed entry cancelled'),
+                  onError: (e) =>
+                    toast.error(e instanceof Error ? e.message : 'Failed'),
+                },
+              )
+            }
+          >
+            Cancel entry
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 // --- Section --------------------------------------------------------------
 
 export function FeedSection({
@@ -487,6 +545,13 @@ export function FeedSection({
                 </span>
                 <span className="font-medium">{formatKg(e.feedQuantityKg)}</span>
                 <EditFeedEntryDialog entry={e} cycleId={cycleId} date={date} />
+                {canManageSessions && (
+                  <CancelFeedEntryButton
+                    entryId={e.id}
+                    cycleId={cycleId}
+                    date={date}
+                  />
+                )}
               </div>
             ))}
           </div>

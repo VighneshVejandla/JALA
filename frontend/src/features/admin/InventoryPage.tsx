@@ -1,11 +1,8 @@
 import { AlertTriangle, PackageOpen } from 'lucide-react';
 import { useFeedInventoryList } from '@/api/queries';
 import type { FeedInventoryResponse } from '@/api/types';
-import {
-  EmptyBlock,
-  ErrorBlock,
-  LoadingBlock,
-} from '@/components/common/StateViews';
+import { EmptyBlock, ErrorBlock } from '@/components/common/StateViews';
+import { CardListSkeleton } from '@/components/common/CardListSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -20,7 +17,7 @@ function isLow(inv: FeedInventoryResponse): boolean {
 export function InventoryPage() {
   const { data, isLoading, isError, refetch } = useFeedInventoryList();
 
-  if (isLoading) return <LoadingBlock label="Loading inventory…" />;
+  if (isLoading) return <CardListSkeleton />;
   if (isError)
     return (
       <ErrorBlock message="Could not load inventory." onRetry={() => refetch()} />

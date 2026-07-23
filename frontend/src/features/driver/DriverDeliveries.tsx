@@ -46,8 +46,11 @@ export function DriverDeliveries() {
   const [filter, setFilter] = useState<'all' | 'ACTIVE' | 'CANCELLED'>('all');
 
   const all = data ?? [];
-  const deliveries =
+  const filtered =
     filter === 'all' ? all : all.filter((d) => d.status.toUpperCase() === filter);
+  // On the home tab (unfiltered), surface just the latest five.
+  const deliveries = filter === 'all' ? filtered.slice(0, 5) : filtered;
+  const truncated = filter === 'all' && filtered.length > deliveries.length;
 
   const submit = async () => {
     try {
@@ -166,6 +169,11 @@ export function DriverDeliveries() {
             </CardContent>
           </Card>
         ))}
+        {truncated && (
+          <p className="text-center text-xs text-muted-foreground">
+            Showing the latest 5 — use a filter to see all.
+          </p>
+        )}
       </div>
     </div>
   );

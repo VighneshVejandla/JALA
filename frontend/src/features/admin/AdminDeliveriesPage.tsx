@@ -3,11 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Truck } from 'lucide-react';
 import { useDeliveries } from '@/api/queries';
 import { ROUTES } from '@/constants/routes';
-import {
-  EmptyBlock,
-  ErrorBlock,
-  LoadingBlock,
-} from '@/components/common/StateViews';
+import { EmptyBlock, ErrorBlock } from '@/components/common/StateViews';
+import { CardListSkeleton } from '@/components/common/CardListSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -29,7 +26,7 @@ export function AdminDeliveriesPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<StatusFilter>('all');
 
-  if (isLoading) return <LoadingBlock label="Loading deliveries…" />;
+  if (isLoading) return <CardListSkeleton />;
   if (isError)
     return (
       <ErrorBlock message="Could not load deliveries." onRetry={() => refetch()} />

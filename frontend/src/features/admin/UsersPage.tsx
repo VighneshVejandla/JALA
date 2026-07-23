@@ -22,6 +22,7 @@ import {
   ErrorBlock,
   LoadingBlock,
 } from '@/components/common/StateViews';
+import { CardListSkeleton } from '@/components/common/CardListSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -469,7 +470,7 @@ export function UsersPage() {
         <AddUserDialog />
       </div>
 
-      {isLoading && <LoadingBlock label="Loading users…" />}
+      {isLoading && <CardListSkeleton />}
       {isError && (
         <ErrorBlock message="Could not load users." onRetry={() => refetch()} />
       )}

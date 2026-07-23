@@ -361,6 +361,25 @@ export function useUpdateFeedEntry(cycleId: string, date: string) {
   });
 }
 
+export function useCancelFeedEntry(cycleId: string, date: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      api.feedEntries.cancel(id, { reason }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: qk.feedEntries(cycleId, date) }),
+  });
+}
+
+export function useCancelMedicine(cycleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      api.medicines.cancel(id, { reason }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.medicines(cycleId) }),
+  });
+}
+
 export function useMedicines(cycleId: string | null) {
   return useQuery({
     queryKey: cycleId ? qk.medicines(cycleId) : ['medicines', 'none'],

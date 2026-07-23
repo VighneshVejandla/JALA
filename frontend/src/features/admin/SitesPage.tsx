@@ -7,11 +7,8 @@ import { ChevronRight, MapPin, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateSite, useSites } from '@/api/queries';
 import { ROUTES } from '@/constants/routes';
-import {
-  EmptyBlock,
-  ErrorBlock,
-  LoadingBlock,
-} from '@/components/common/StateViews';
+import { EmptyBlock, ErrorBlock } from '@/components/common/StateViews';
+import { CardListSkeleton } from '@/components/common/CardListSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -133,7 +130,7 @@ export function SitesPage() {
         <AddSiteDialog />
       </div>
 
-      {isLoading && <LoadingBlock label="Loading sites…" />}
+      {isLoading && <CardListSkeleton />}
       {isError && (
         <ErrorBlock message="Could not load sites." onRetry={() => refetch()} />
       )}

@@ -7,10 +7,23 @@ import { Download, ImageIcon, ImagePlus, Pill, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/api/endpoints';
 import {
+  useCancelMedicine,
   useCreateMedicine,
   useMedicinePhotos,
   useMedicines,
 } from '@/api/queries';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { XCircle } from 'lucide-react';
 import type { MedicineUnit } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -248,7 +261,55 @@ function ViewPhotosDialog({ medicineEntryId }: { medicineEntryId: string }) {
   );
 }
 
-export function MedicineSection({ cycleId }: { cycleId: string }) {
+function CancelMedicineButton({
+  medicineId,
+  cycleId,
+}: {
+  medicineId: string;
+  cycleId: string;
+}) {
+  const cancel = useCancelMedicine(cycleId);
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Cancel medicine">
+          <XCircle className="h-4 w-4 text-destructive" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel this medicine record?</AlertDialogTitle>
+          <AlertDialogDescription>It will be voided.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() =>
+              cancel.mutate(
+                { id: medicineId, reason: 'Cancelled by admin' },
+                {
+                  onSuccess: () => toast.success('Medicine cancelled'),
+                  onError: (e) =>
+                    toast.error(e instanceof Error ? e.message : 'Failed'),
+                },
+              )
+            }
+          >
+            Cancel record
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+export function MedicineSection({
+  cycleId,
+  canManage = true,
+}: {
+  cycleId: string;
+  canManage?: boolean;
+}) {
   const medicines = useMedicines(cycleId);
 
   return (
@@ -282,6 +343,9 @@ export function MedicineSection({ cycleId }: { cycleId: string }) {
             </div>
             <ViewPhotosDialog medicineEntryId={m.id} />
             <UploadPhotoButton medicineEntryId={m.id} />
+            {canManage && (
+              <CancelMedicineButton medicineId={m.id} cycleId={cycleId} />
+            )}
           </div>
         ))}
       </CardContent>

@@ -120,6 +120,8 @@ export const handlers = [
   http.post(`${BASE}/users/:id/sites/:siteId`, () => ok(null)),
   http.delete(`${BASE}/users/:id/sites/:siteId`, () => ok(null)),
   http.patch(`${BASE}/feed-entries/:id`, () => ok(fx.feedEntries[0])),
+  http.patch(`${BASE}/feed-entries/:id/cancel`, () => ok(fx.feedEntries[0])),
+  http.patch(`${BASE}/medicines/:id/cancel`, () => ok(fx.medicines[0])),
 
   http.get(`${BASE}/history/pond/:pondId/cycles`, () =>
     ok([

@@ -237,12 +237,17 @@ function CancelHarvestButton({
   );
 }
 
+const PAGE_SIZE = 10;
+
 export function HarvestedPage() {
   const { sites, siteId, select } = useSelectedSite();
   const ponds = usePondsBySite(siteId);
   const [pondId, setPondId] = useState<string | null>(null);
+  const [visible, setVisible] = useState(PAGE_SIZE);
   const summary = useHarvestAnalytics(pondId);
   const harvests = useHistoryHarvests(pondId);
+  const rows = harvests.data ?? [];
+  const shown = rows.slice(0, visible);
 
   return (
     <div className="space-y-4">
@@ -293,14 +298,14 @@ export function HarvestedPage() {
       {pondId && (
         <div className="space-y-2">
           {harvests.isLoading && <LoadingBlock label="Loading harvests…" />}
-          {harvests.data?.length === 0 && (
+          {rows.length === 0 && (
             <EmptyBlock
               icon={<Fish className="h-6 w-6" />}
               title="No harvests"
               description="This pond has no harvest records yet."
             />
           )}
-          {harvests.data?.map((h) => (
+          {shown.map((h) => (
             <Card key={h.harvestId}>
               <CardContent className="flex items-start gap-3 p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600">
@@ -334,6 +339,15 @@ export function HarvestedPage() {
               </CardContent>
             </Card>
           ))}
+          {rows.length > visible && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setVisible((v) => v + PAGE_SIZE)}
+            >
+              Show more ({rows.length - visible})
+            </Button>
+          )}
         </div>
       )}
     </div>

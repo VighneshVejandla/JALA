@@ -60,10 +60,14 @@ describe('DriverDeliveryDetail', () => {
     await waitFor(() => expect(added).toBe(true));
   });
 
-  it('uploads a receipt for a drop-off', async () => {
+  it('uploads a receipt for a drop-off within the edit window', async () => {
     asDriver();
     let uploaded = false;
     server.use(
+      // Recent delivery → still within the 6h window (unlocked).
+      http.get(`${BASE}/feed-deliveries/:id`, () =>
+        ok({ ...fx.deliveries[0], deliveredAt: new Date().toISOString() }),
+      ),
       http.post(`${BASE}/site-delivery-receipts`, () => {
         uploaded = true;
         return ok(fx.receipts[0]);
@@ -77,6 +81,21 @@ describe('DriverDeliveryDetail', () => {
     const input = await screen.findByLabelText(/receipt for North Farm/i);
     await user.upload(input, new File(['x'], 'r.png', { type: 'image/png' }));
     await waitFor(() => expect(uploaded).toBe(true));
+  });
+
+  it('locks receipt upload after the 6h window', async () => {
+    asDriver();
+    server.use(
+      // Old delivery (fixture date) → locked.
+      http.get(`${BASE}/feed-deliveries/:id`, () => ok(fx.deliveries[0])),
+    );
+    renderWithProviders(<AppRoutes />, {
+      route: '/driver/deliveries/d-1',
+      authed: true,
+    });
+    expect(
+      await screen.findByRole('button', { name: /locked/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows an error when the delivery fails to load', async () => {

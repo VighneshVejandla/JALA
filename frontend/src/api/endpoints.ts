@@ -136,6 +136,8 @@ export const api = {
       post<FeedEntryResponse>(ENDPOINTS.feedEntries.base, body),
     update: (id: string, body: UpdateFeedEntryRequest) =>
       patch<FeedEntryResponse>(ENDPOINTS.feedEntries.byId(id), body),
+    cancel: (id: string, body: { reason: string }) =>
+      patch<FeedEntryResponse>(ENDPOINTS.feedEntries.cancel(id), body),
   },
 
   medicines: {
@@ -143,6 +145,8 @@ export const api = {
       get<MedicineResponse[]>(ENDPOINTS.medicines.base, { pondCycleId }),
     create: (body: CreateMedicineRequest) =>
       post<MedicineResponse>(ENDPOINTS.medicines.base, body),
+    cancel: (id: string, body: { reason: string }) =>
+      patch<MedicineResponse>(ENDPOINTS.medicines.cancel(id), body),
   },
 
   medicinePhotos: {

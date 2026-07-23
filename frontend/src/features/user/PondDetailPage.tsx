@@ -109,7 +109,7 @@ export function PondDetailPage() {
                 pondId={pondId}
                 canManageSessions={false}
               />
-              <MedicineSection cycleId={data.activeCycleId} />
+              <MedicineSection cycleId={data.activeCycleId} canManage={false} />
             </>
           )}
         </>
