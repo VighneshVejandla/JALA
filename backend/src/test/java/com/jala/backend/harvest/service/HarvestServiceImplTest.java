@@ -186,4 +186,36 @@ class HarvestServiceImplTest {
 
         verify(siteAccessService).checkPondCycleAccess(cycle.getId());
     }
+
+    @Test
+    @DisplayName("updateHarvest applies fields and recomputes the total")
+    void updateHarvest_success() {
+        when(repository.findByIdAndStatus(harvest.getId(), HarvestStatus.ACTIVE))
+                .thenReturn(Optional.of(harvest));
+        when(repository.save(harvest)).thenReturn(harvest);
+        when(mapper.toResponse(harvest)).thenReturn(new HarvestResponse());
+
+        var req = new com.jala.backend.harvest.dto.request.UpdateHarvestRequest();
+        req.setHarvestQuantityKg(new BigDecimal("100"));
+        req.setSellingPricePerKg(new BigDecimal("12"));
+        req.setBuyerName("Acme");
+
+        service.updateHarvest(harvest.getId(), req);
+
+        assertThat(harvest.getBuyerName()).isEqualTo("Acme");
+        assertThat(harvest.getTotalAmount()).isEqualByComparingTo("1200");
+        verify(repository).save(harvest);
+    }
+
+    @Test
+    @DisplayName("updateHarvest rejects an unknown harvest")
+    void updateHarvest_notFound() {
+        UUID id = UUID.randomUUID();
+        when(repository.findByIdAndStatus(id, HarvestStatus.ACTIVE))
+                .thenReturn(Optional.empty());
+        assertThatThrownBy(() ->
+                service.updateHarvest(id,
+                        new com.jala.backend.harvest.dto.request.UpdateHarvestRequest()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

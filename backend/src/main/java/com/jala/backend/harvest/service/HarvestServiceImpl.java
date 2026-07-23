@@ -137,6 +137,54 @@ public class HarvestServiceImpl implements HarvestService {
     }
 
     @Override
+    @Transactional
+    public HarvestResponse updateHarvest(
+            UUID harvestId,
+            com.jala.backend.harvest.dto.request.UpdateHarvestRequest request) {
+
+        Harvest harvest = repository
+                .findByIdAndStatus(harvestId, HarvestStatus.ACTIVE)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Harvest not found."));
+
+        siteAccessService.checkPondCycleAccess(
+                harvest.getPondCycle().getId());
+
+        if (request.getHarvestDate() != null) {
+            harvest.setHarvestDate(request.getHarvestDate());
+        }
+        if (request.getHarvestQuantityKg() != null) {
+            harvest.setHarvestQuantityKg(request.getHarvestQuantityKg());
+        }
+        if (request.getBuyerName() != null) {
+            harvest.setBuyerName(request.getBuyerName());
+        }
+        if (request.getSellingPricePerKg() != null) {
+            harvest.setSellingPricePerKg(request.getSellingPricePerKg());
+        }
+        if (request.getVehicleNumber() != null) {
+            harvest.setVehicleNumber(request.getVehicleNumber());
+        }
+        if (request.getRemarks() != null) {
+            harvest.setRemarks(request.getRemarks());
+        }
+
+        // Recompute the total whenever price or quantity is known.
+        if (harvest.getSellingPricePerKg() != null
+                && harvest.getHarvestQuantityKg() != null) {
+            harvest.setTotalAmount(
+                    harvest.getSellingPricePerKg()
+                            .multiply(harvest.getHarvestQuantityKg()));
+        }
+
+        Harvest saved = repository.save(harvest);
+
+        log.info("Harvest {} updated successfully.", harvestId);
+
+        return mapper.toResponse(saved);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<HarvestResponse> getHarvests(
             UUID pondCycleId,

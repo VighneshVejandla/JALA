@@ -42,8 +42,20 @@ class NotificationControllerTest extends WebSliceTestBase {
 
     @Test
     @WithMockUser(roles = "DRIVER")
-    @DisplayName("driver is forbidden")
-    void driver_forbidden() throws Exception {
+    @DisplayName("driver reads notifications")
+    void driver_ok() throws Exception {
+        given(notificationService.getNotifications(any(), any()))
+                .willReturn(NotificationSummaryResponse.builder().build());
+        mockMvc.perform(get("/api/v1/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result
+                        .MockMvcResultMatchers.jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @WithMockUser(roles = "SUPERVISOR")
+    @DisplayName("supervisor is forbidden")
+    void supervisor_forbidden() throws Exception {
         mockMvc.perform(get("/api/v1/notifications"))
                 .andExpect(status().isForbidden());
     }

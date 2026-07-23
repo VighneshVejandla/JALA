@@ -42,6 +42,18 @@ class FeedDeliveryControllerTest extends WebSliceTestBase {
     }
 
     @Test
+    @WithMockUser(roles = "DRIVER")
+    @DisplayName("driver can list deliveries")
+    void driver_ok() throws Exception {
+        given(feedDeliveryService.getAllDeliveries(any(), any()))
+                .willReturn(List.of());
+        mockMvc.perform(get("/api/v1/feed-deliveries"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result
+                        .MockMvcResultMatchers.jsonPath("$.success").value(true));
+    }
+
+    @Test
     @WithMockUser(roles = "WORKER")
     @DisplayName("worker is forbidden from the delivery list")
     void worker_forbidden() throws Exception {

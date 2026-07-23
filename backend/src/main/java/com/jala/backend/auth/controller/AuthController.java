@@ -1,7 +1,9 @@
 package com.jala.backend.auth.controller;
 
+import com.jala.backend.auth.dto.ChangePasswordRequest;
 import com.jala.backend.auth.dto.LoginRequest;
 import com.jala.backend.auth.dto.LoginResponse;
+import com.jala.backend.auth.dto.UpdateProfileRequest;
 import com.jala.backend.auth.service.AuthService;
 import com.jala.backend.common.response.ApiResponse;
 import com.jala.backend.user.dto.response.UserResponse;
@@ -46,6 +48,38 @@ public class AuthController {
                         .success(true)
                         .message("Profile fetched successfully")
                         .data(response)
+                        .build()
+        );
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            Authentication authentication,
+            @Valid @RequestBody UpdateProfileRequest request) {
+
+        UserResponse response =
+                authService.updateProfile(authentication.getName(), request);
+
+        return ResponseEntity.ok(
+                ApiResponse.<UserResponse>builder()
+                        .success(true)
+                        .message("Profile updated successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        authService.changePassword(authentication.getName(), request);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Password changed successfully")
                         .build()
         );
     }

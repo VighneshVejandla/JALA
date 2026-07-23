@@ -9,9 +9,12 @@ import com.jala.backend.search.dto.response.GlobalSearchResponse;
 import com.jala.backend.search.dto.response.SearchResultResponse;
 import com.jala.backend.site.repository.SiteRepository;
 import com.jala.backend.siteaccess.service.SiteAccessService;
+import com.jala.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,8 @@ public class SearchServiceImpl
 
     private final NotificationRepository notificationRepository;
 
+    private final UserRepository userRepository;
+
     private final SiteAccessService siteAccessService;
 
     @Override
@@ -56,6 +61,8 @@ public class SearchServiceImpl
                 accessible == null ? null : Set.copyOf(accessible);
 
         return GlobalSearchResponse.builder()
+
+                .users(searchUsers(keyword))
 
                 .sites(searchSites(keyword, allowedSites))
 
@@ -77,6 +84,31 @@ public class SearchServiceImpl
             UUID siteId) {
 
         return allowedSites == null || allowedSites.contains(siteId);
+    }
+
+    /** Only admins/managers can search the user directory. */
+    private static boolean canSeeUsers() {
+        Authentication auth =
+                SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .anyMatch(r -> r.equals("ROLE_ADMIN") || r.equals("ROLE_MANAGER"));
+    }
+
+    private List<SearchResultResponse> searchUsers(String keyword) {
+        if (!canSeeUsers()) {
+            return List.of();
+        }
+        return userRepository.search(keyword, RESULT_CAP)
+                .stream()
+                .map(user ->
+                        SearchResultResponse.builder()
+                                .id(user.getId())
+                                .type("USER")
+                                .title(user.getFullName())
+                                .subtitle(user.getEmployeeCode())
+                                .build())
+                .toList();
     }
 
     private List<SearchResultResponse> searchSites(

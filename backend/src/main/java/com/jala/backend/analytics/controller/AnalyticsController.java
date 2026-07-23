@@ -24,6 +24,27 @@ public class AnalyticsController {
 
     private final AnalyticsService service;
 
+    @GetMapping("/feed/site/{siteId}/daily")
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    public ResponseEntity<ApiResponse<java.util.List<
+            com.jala.backend.analytics.dto.response.DailyFeedResponse>>>
+    getSiteFeedDaily(
+            @PathVariable UUID siteId,
+            @RequestParam(required = false, defaultValue = "14") int days) {
+
+        var response = service.getSiteFeedDaily(siteId, days);
+
+        return ResponseEntity.ok(
+                ApiResponse.<java.util.List<
+                        com.jala.backend.analytics.dto.response.DailyFeedResponse>>
+                        builder()
+                        .success(true)
+                        .message("Daily feed fetched successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
     @GetMapping("/feed/pond/{pondId}")
     @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
     public ResponseEntity<ApiResponse<FeedAnalyticsResponse>>

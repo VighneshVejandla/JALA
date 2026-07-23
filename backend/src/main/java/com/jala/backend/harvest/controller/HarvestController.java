@@ -4,6 +4,7 @@ import com.jala.backend.common.constants.ApiConstants;
 import com.jala.backend.common.response.ApiResponse;
 import com.jala.backend.harvest.dto.request.CreateHarvestRequest;
 import com.jala.backend.harvest.dto.request.CancelHarvestRequest;
+import com.jala.backend.harvest.dto.request.UpdateHarvestRequest;
 import com.jala.backend.harvest.dto.response.HarvestResponse;
 import com.jala.backend.harvest.service.HarvestService;
 import jakarta.validation.Valid;
@@ -55,6 +56,24 @@ public class HarvestController {
                 ApiResponse.<List<HarvestResponse>>builder()
                         .success(true)
                         .message("Harvests fetched successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @PatchMapping("/{harvestId}")
+    @PreAuthorize("hasAnyRole('ADMIN','WORKER')")
+    public ResponseEntity<ApiResponse<HarvestResponse>> updateHarvest(
+            @PathVariable UUID harvestId,
+            @Valid @RequestBody UpdateHarvestRequest request) {
+
+        HarvestResponse response =
+                service.updateHarvest(harvestId, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.<HarvestResponse>builder()
+                        .success(true)
+                        .message("Harvest updated successfully")
                         .data(response)
                         .build()
         );

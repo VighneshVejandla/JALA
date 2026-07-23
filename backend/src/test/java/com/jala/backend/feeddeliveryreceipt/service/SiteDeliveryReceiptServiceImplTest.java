@@ -167,4 +167,27 @@ class SiteDeliveryReceiptServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Site delivery not found.");
     }
+
+    @Test
+    @DisplayName("uploadReceipt is rejected after the 6-hour window")
+    void uploadReceipt_windowClosed() {
+        var fd = com.jala.backend.feeddelivery.entity.FeedDelivery.builder()
+                .id(UUID.randomUUID())
+                .deliveredAt(
+                        com.jala.backend.common.util.DateTimeUtil.now()
+                                .minusHours(7))
+                .build();
+        siteDelivery.setFeedDelivery(fd);
+
+        when(siteDeliveryRepository.findById(siteDelivery.getId()))
+                .thenReturn(Optional.of(siteDelivery));
+
+        var req = new CreateSiteDeliveryReceiptRequest();
+        req.setSiteDeliveryId(siteDelivery.getId());
+
+        assertThatThrownBy(() -> service.uploadReceipt(req))
+                .isInstanceOf(
+                        com.jala.backend.common.exception.BadRequestException.class)
+                .hasMessageContaining("6 hours");
+    }
 }

@@ -4,6 +4,7 @@ import com.jala.backend.common.constants.ApiConstants;
 import com.jala.backend.common.response.ApiResponse;
 
 import com.jala.backend.user.dto.request.CreateUserRequest;
+import com.jala.backend.user.dto.request.ResetPasswordRequest;
 import com.jala.backend.user.dto.request.UpdateUserRequest;
 import com.jala.backend.user.dto.response.UserResponse;
 import com.jala.backend.user.service.UserService;
@@ -36,6 +37,22 @@ public class UserController {
                         .success(true)
                         .message("User created successfully")
                         .data(response)
+                        .build()
+        );
+    }
+
+    @PatchMapping("/{id}/password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody ResetPasswordRequest request) {
+
+        userService.resetPassword(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Password reset successfully")
                         .build()
         );
     }

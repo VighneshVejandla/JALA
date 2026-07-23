@@ -56,6 +56,9 @@ class AuthServiceImplTest {
     @Mock
     private LoginAttemptService loginAttemptService;
 
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -195,5 +198,75 @@ class AuthServiceImplTest {
                 .hasMessage("User not found");
 
         verifyNoInteractions(userMapper);
+    }
+
+    @Test
+    @DisplayName("updateProfile applies non-null fields and saves")
+    void updateProfile_updatesFields() {
+        User user = buildUser();
+        when(userRepository.findByEmployeeCode("EMP-001"))
+                .thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toResponse(any(User.class)))
+                .thenReturn(UserResponse.builder().build());
+
+        var req = new com.jala.backend.auth.dto.UpdateProfileRequest();
+        req.setFullName("New Name");
+        req.setEmail("new@example.com");
+        req.setPhone("8888888888");
+
+        authService.updateProfile("EMP-001", req);
+
+        assertThat(user.getFullName()).isEqualTo("New Name");
+        assertThat(user.getEmail()).isEqualTo("new@example.com");
+        assertThat(user.getPhone()).isEqualTo("8888888888");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("updateProfile rejects an unknown user")
+    void updateProfile_notFound() {
+        when(userRepository.findByEmployeeCode("GHOST"))
+                .thenReturn(Optional.empty());
+        assertThatThrownBy(() ->
+                authService.updateProfile("GHOST",
+                        new com.jala.backend.auth.dto.UpdateProfileRequest()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("changePassword re-encodes when the current password matches")
+    void changePassword_success() {
+        User user = buildUser();
+        when(userRepository.findByEmployeeCode("EMP-001"))
+                .thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("old-pass-123", "hash")).thenReturn(true);
+        when(passwordEncoder.encode("new-password-123")).thenReturn("new-hash");
+
+        var req = new com.jala.backend.auth.dto.ChangePasswordRequest();
+        req.setCurrentPassword("old-pass-123");
+        req.setNewPassword("new-password-123");
+
+        authService.changePassword("EMP-001", req);
+
+        assertThat(user.getPasswordHash()).isEqualTo("new-hash");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("changePassword rejects a wrong current password")
+    void changePassword_wrongCurrent() {
+        User user = buildUser();
+        when(userRepository.findByEmployeeCode("EMP-001"))
+                .thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
+
+        var req = new com.jala.backend.auth.dto.ChangePasswordRequest();
+        req.setCurrentPassword("wrong");
+        req.setNewPassword("new-password-123");
+
+        assertThatThrownBy(() -> authService.changePassword("EMP-001", req))
+                .isInstanceOf(com.jala.backend.common.exception.BadRequestException.class);
+        verify(userRepository, never()).save(any());
     }
 }

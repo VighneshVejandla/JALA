@@ -2,6 +2,7 @@ package com.jala.backend.user.service;
 
 import com.jala.backend.user.dto.request.UpdateUserRequest;
 import com.jala.backend.user.dto.request.CreateUserRequest;
+import com.jala.backend.user.dto.request.ResetPasswordRequest;
 import com.jala.backend.user.dto.response.UserResponse;
 
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.UUID;
 public interface UserService {
 
     UserResponse createUser(CreateUserRequest request);
+
+    void resetPassword(UUID id, ResetPasswordRequest request);
 
     List<UserResponse> getAllUsers();
 

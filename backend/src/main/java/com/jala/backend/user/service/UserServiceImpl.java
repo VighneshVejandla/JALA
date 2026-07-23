@@ -8,6 +8,7 @@ import com.jala.backend.role.repository.RoleRepository;
 import com.jala.backend.siteaccess.service.SiteAssignmentService;
 import com.jala.backend.user.dto.request.UpdateUserRequest;
 import com.jala.backend.user.dto.request.CreateUserRequest;
+import com.jala.backend.user.dto.request.ResetPasswordRequest;
 import com.jala.backend.user.dto.response.UserResponse;
 import com.jala.backend.user.entity.User;
 import com.jala.backend.user.mapper.UserMapper;
@@ -50,6 +51,20 @@ public class UserServiceImpl implements UserService {
                 );
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(UUID id, ResetPasswordRequest request) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("Password reset for user {}", id);
     }
 
     @Override
