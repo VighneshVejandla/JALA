@@ -1,9 +1,9 @@
 import { MapPin, PackageOpen, Utensils } from 'lucide-react';
-import { useFeedChart, useHomeDashboard } from '@/api/queries';
+import { useSiteFeedDaily, useHomeDashboard } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import { StatCard } from '@/components/common/StatCard';
-import { MonthlyChart } from '@/components/common/MonthlyChart';
+import { FeedTrend } from '@/components/common/FeedTrend';
 import {
   EmptyBlock,
   ErrorBlock,
@@ -24,7 +24,7 @@ import { formatKg } from '@/lib/format';
 export function UserHome() {
   const { sites, siteId, select, isLoading: sitesLoading } = useSelectedSite();
   const { data, isLoading, isError, refetch } = useHomeDashboard(siteId);
-  const feedChart = useFeedChart(siteId);
+  const feedDaily = useSiteFeedDaily(siteId);
 
   return (
     <div className="space-y-4">
@@ -75,13 +75,13 @@ export function UserHome() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Feed trend · last 12 months</CardTitle>
+              <CardTitle className="text-base">Feed trend · last 14 days</CardTitle>
             </CardHeader>
             <CardContent>
-              {feedChart.isLoading ? (
+              {feedDaily.isLoading ? (
                 <LoadingBlock />
               ) : (
-                <MonthlyChart data={feedChart.data ?? []} color="hsl(199 89% 48%)" />
+                <FeedTrend data={feedDaily.data ?? []} />
               )}
             </CardContent>
           </Card>

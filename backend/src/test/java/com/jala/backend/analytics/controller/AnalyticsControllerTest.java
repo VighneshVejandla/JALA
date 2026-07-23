@@ -61,4 +61,17 @@ class AnalyticsControllerTest extends WebSliceTestBase {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
+
+    @Test
+    @WithMockUser(roles = "WORKER")
+    @DisplayName("worker can read the daily feed series")
+    void dailyFeed_ok() throws Exception {
+        given(analyticsService.getSiteFeedDaily(any(), org.mockito.ArgumentMatchers.anyInt()))
+                .willReturn(java.util.List.of());
+
+        mockMvc.perform(get("/api/v1/analytics/feed/site/" + UUID.randomUUID() + "/daily")
+                        .param("days", "14"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
 }

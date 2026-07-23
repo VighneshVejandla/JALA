@@ -435,6 +435,33 @@ public class AnalyticsServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public java.util.List<DailyFeedResponse> getSiteFeedDaily(
+            UUID siteId, int days) {
+
+        siteAccessService.checkSiteAccess(siteId);
+
+        int span = Math.max(1, Math.min(days, 90));
+        LocalDate today = DateTimeUtil.today();
+        LocalDate from = today.minusDays(span - 1L);
+
+        java.util.Map<LocalDate, BigDecimal> byDay = new java.util.HashMap<>();
+        for (Object[] row : feedEntryRepository.sumFeedKgByDay(siteId, from)) {
+            byDay.put((LocalDate) row[0], (BigDecimal) row[1]);
+        }
+
+        java.util.List<DailyFeedResponse> series = new java.util.ArrayList<>();
+        for (int i = 0; i < span; i++) {
+            LocalDate d = from.plusDays(i);
+            series.add(DailyFeedResponse.builder()
+                    .date(d)
+                    .feedKg(byDay.getOrDefault(d, BigDecimal.ZERO))
+                    .build());
+        }
+        return series;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SiteFeedAnalyticsResponse getSiteFeedAnalytics(
             UUID siteId) {
 

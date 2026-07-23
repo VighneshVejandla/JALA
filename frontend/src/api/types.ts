@@ -585,6 +585,12 @@ export interface MonthlyChartResponse {
   value: number;
 }
 
+/** One day's total feed for a site (daily trend series). */
+export interface DailyFeedResponse {
+  date: string;
+  feedKg: number;
+}
+
 // ---------------------------------------------------------------------------
 // Global search
 // ---------------------------------------------------------------------------
@@ -597,6 +603,7 @@ export interface SearchResultResponse {
 }
 
 export interface GlobalSearchResponse {
+  users: SearchResultResponse[];
   sites: SearchResultResponse[];
   ponds: SearchResultResponse[];
   feedEntries: SearchResultResponse[];

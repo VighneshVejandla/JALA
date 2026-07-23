@@ -430,6 +430,14 @@ export function useInventory(siteId: string | null) {
   });
 }
 
+export function useSiteFeedDaily(siteId: string | null) {
+  return useQuery({
+    queryKey: siteId ? ['analytics', 'feed-daily', siteId] : ['feed-daily', 'none'],
+    queryFn: () => api.analytics.feedSiteDaily(siteId as string),
+    enabled: !!siteId,
+  });
+}
+
 export function useSiteFeedAnalytics(siteId: string | null) {
   return useQuery({
     queryKey: siteId ? ['analytics', 'feed', 'site', siteId] : ['analytics', 'feed', 'none'],

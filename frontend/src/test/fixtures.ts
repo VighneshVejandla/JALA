@@ -323,7 +323,14 @@ export const inventoryAnalytics: InventoryAnalyticsResponse = {
   availableBags: 80,
 };
 
+/** 14-day feed series with a sharp drop on the last day (triggers the alert). */
+export const dailyFeed = Array.from({ length: 14 }, (_, i) => ({
+  date: `2026-07-${String(i + 1).padStart(2, '0')}`,
+  feedKg: i === 13 ? 20 : 100,
+}));
+
 export const globalSearch = {
+  users: [{ id: 'u-admin', type: 'USER', title: 'Ada Admin', subtitle: 'EMP-ADMIN' }],
   sites: [{ id: 'site-1', type: 'SITE', title: 'North Farm', subtitle: 'S-001' }],
   ponds: [{ id: 'pond-1', type: 'POND', title: 'Pond One', subtitle: 'P-01' }],
   feedEntries: [],

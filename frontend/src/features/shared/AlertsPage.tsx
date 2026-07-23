@@ -13,16 +13,25 @@ import {
 } from '@/components/common/StateViews';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { formatDateTime } from '@/lib/format';
 
 type Filter = 'all' | 'unread';
+const ALL_CATEGORIES = '__all__';
 
 export function AlertsPage() {
   const { data, isLoading, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
   const [filter, setFilter] = useState<Filter>('all');
+  const [category, setCategory] = useState<string>(ALL_CATEGORIES);
 
   if (isLoading) return <LoadingBlock label="Loading alerts…" />;
   if (isError)
@@ -30,7 +39,12 @@ export function AlertsPage() {
 
   const all = data?.notifications ?? [];
   const unreadIds = all.filter((n) => n.status === 'UNREAD').map((n) => n.id);
-  const notifications = filter === 'unread' ? all.filter((n) => n.status === 'UNREAD') : all;
+  const categories = Array.from(new Set(all.map((n) => n.type)));
+  const notifications = all.filter(
+    (n) =>
+      (filter === 'all' || n.status === 'UNREAD') &&
+      (category === ALL_CATEGORIES || n.type === category),
+  );
 
   if (all.length === 0)
     return (
@@ -77,6 +91,22 @@ export function AlertsPage() {
           <CheckCheck className="mr-1 h-4 w-4" /> Mark all read
         </Button>
       </div>
+
+      {categories.length > 1 && (
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="h-9 w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c.replace(/_/g, ' ')}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {notifications.length === 0 && (
         <EmptyBlock

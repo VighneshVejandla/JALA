@@ -10,6 +10,7 @@ import type {
   CreatePondRequest,
   CreateSiteRequest,
   CreateUserRequest,
+  DailyFeedResponse,
   FeedAnalyticsResponse,
   FeedDeliveryResponse,
   FeedEntryResponse,
@@ -197,6 +198,10 @@ export const api = {
       get<FeedAnalyticsResponse>(ENDPOINTS.analytics.feedPond(pondId)),
     feedSite: (siteId: string) =>
       get<SiteFeedAnalyticsResponse>(ENDPOINTS.analytics.feedSite(siteId)),
+    feedSiteDaily: (siteId: string, days = 14) =>
+      get<DailyFeedResponse[]>(ENDPOINTS.analytics.feedSiteDaily(siteId), {
+        days,
+      }),
     harvestPond: (pondId: string) =>
       get<PondHarvestAnalyticsResponse>(ENDPOINTS.analytics.harvestPond(pondId)),
     harvestSite: (siteId: string) =>

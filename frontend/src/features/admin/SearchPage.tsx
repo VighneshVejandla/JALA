@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 const GROUPS: { key: keyof GlobalSearchResponse; label: string }[] = [
+  { key: 'users', label: 'Users' },
   { key: 'sites', label: 'Sites' },
   { key: 'ponds', label: 'Ponds' },
   { key: 'feedEntries', label: 'Feed entries' },

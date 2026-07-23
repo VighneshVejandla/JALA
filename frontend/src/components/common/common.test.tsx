@@ -79,6 +79,40 @@ describe('MonthlyChart', () => {
   });
 });
 
+describe('FeedTrend', () => {
+  it('flags a material feed reduction', async () => {
+    const { FeedTrend } = await import('./FeedTrend');
+    render(
+      <FeedTrend
+        data={[
+          { date: '2026-07-01', feedKg: 100 },
+          { date: '2026-07-02', feedKg: 40 },
+        ]}
+      />,
+    );
+    expect(screen.getByText(/feed intake dropped/i)).toBeInTheDocument();
+  });
+
+  it('does not flag a stable feed level', async () => {
+    const { FeedTrend } = await import('./FeedTrend');
+    render(
+      <FeedTrend
+        data={[
+          { date: '2026-07-01', feedKg: 100 },
+          { date: '2026-07-02', feedKg: 100 },
+        ]}
+      />,
+    );
+    expect(screen.queryByText(/feed intake dropped/i)).not.toBeInTheDocument();
+  });
+
+  it('handles an empty series', async () => {
+    const { FeedTrend } = await import('./FeedTrend');
+    const { container } = render(<FeedTrend data={[]} />);
+    expect(container).toBeTruthy();
+  });
+});
+
 describe('FullScreenLoader', () => {
   it('renders the label', () => {
     render(<FullScreenLoader label="Please wait" />);

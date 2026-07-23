@@ -235,6 +235,20 @@ public interface FeedEntryRepository
     List<Object[]> sumFeedKgByMonth(
             UUID siteId);
 
+    /** (feedDate, fed kg total) rows from a start date, one row per day. */
+    @Query("""
+            SELECT f.feedDate, COALESCE(SUM(f.feedQuantityKg), 0)
+            FROM FeedEntry f
+            WHERE f.status = com.jala.backend.feedentry.enums.FeedEntryStatus.ACTIVE
+            AND f.pondCycle.pond.site.id = :siteId
+            AND f.feedDate >= :fromDate
+            GROUP BY f.feedDate
+            ORDER BY f.feedDate
+            """)
+    List<Object[]> sumFeedKgByDay(
+            UUID siteId,
+            java.time.LocalDate fromDate);
+
     long countByPondCycleIdAndStatus(
             UUID pondCycleId,
             FeedEntryStatus status);

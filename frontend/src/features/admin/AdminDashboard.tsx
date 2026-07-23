@@ -14,13 +14,19 @@ import {
   Wheat,
   type LucideIcon,
 } from 'lucide-react';
-import { useHomeDashboard } from '@/api/queries';
+import { useHomeDashboard, useSiteFeedDaily } from '@/api/queries';
 import { useSelectedSite } from '@/hooks/useSelectedSite';
 import { ROUTES } from '@/constants/routes';
 import { SiteSelector } from '@/components/common/SiteSelector';
 import { StatCard } from '@/components/common/StatCard';
+import { FeedTrend } from '@/components/common/FeedTrend';
 import { ErrorBlock, LoadingBlock } from '@/components/common/StateViews';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { formatCurrency, formatKg, formatNumber } from '@/lib/format';
 
 const QUICK_LINKS: { to: string; label: string; icon: LucideIcon }[] = [
@@ -38,6 +44,7 @@ const QUICK_LINKS: { to: string; label: string; icon: LucideIcon }[] = [
 export function AdminDashboard() {
   const { sites, siteId, select, isLoading: sitesLoading } = useSelectedSite();
   const { data, isLoading, isError, refetch } = useHomeDashboard(siteId);
+  const feedDaily = useSiteFeedDaily(siteId);
 
   return (
     <div className="space-y-4">
@@ -107,6 +114,19 @@ export function AdminDashboard() {
               tone="success"
             />
           </div>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Feed trend · last 14 days</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {feedDaily.isLoading ? (
+                <LoadingBlock />
+              ) : (
+                <FeedTrend data={feedDaily.data ?? []} />
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
     </div>

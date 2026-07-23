@@ -39,13 +39,15 @@ describe('ReportsPage', () => {
 });
 
 describe('SearchPage', () => {
-  it('searches and shows grouped results', async () => {
+  it('searches and shows grouped results incl. users', async () => {
     asAdmin();
     renderWithProviders(<AppRoutes />, { route: '/admin/search', authed: true });
     const user = userEvent.setup();
     await user.type(await screen.findByPlaceholderText(/search sites/i), 'north');
     expect(await screen.findByText('North Farm')).toBeInTheDocument();
     expect(screen.getByText('Pond One')).toBeInTheDocument();
+    // User results group
+    expect(screen.getByText('Ada Admin')).toBeInTheDocument();
   });
 
   it('ReportsPage shows a no-sites state', async () => {
@@ -182,6 +184,19 @@ describe('Alerts filters + mark all read', () => {
     await user.click(await screen.findByRole('button', { name: /^unread/i }));
     await user.click(screen.getByRole('button', { name: /mark all read/i }));
     await waitFor(() => expect(marked).toBeGreaterThanOrEqual(1));
+  });
+
+  it('filters by category', async () => {
+    asWorker();
+    renderWithProviders(<AppRoutes />, { route: '/app/alerts', authed: true });
+    const user = userEvent.setup();
+    // Two fixture notifications have distinct types → the category select shows.
+    expect(await screen.findByText('Low feed')).toBeInTheDocument();
+    const combo = await screen.findByRole('combobox');
+    await user.click(combo);
+    await user.click(await screen.findByRole('option', { name: /low inventory/i }));
+    // The INFO notification ("Cycle started") is filtered out.
+    expect(screen.queryByText('Cycle started')).not.toBeInTheDocument();
   });
 });
 

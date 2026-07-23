@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { ImageIcon, ImagePlus, Pill, Plus } from 'lucide-react';
+import { Download, ImageIcon, ImagePlus, Pill, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/api/endpoints';
 import {
@@ -219,20 +219,28 @@ function ViewPhotosDialog({ medicineEntryId }: { medicineEntryId: string }) {
         )}
         <div className="grid grid-cols-2 gap-2">
           {photos.data?.map((p) => (
-            <a
+            <div
               key={p.id}
-              href={p.filePath}
-              target="_blank"
-              rel="noreferrer"
               className="overflow-hidden rounded-lg border border-border"
             >
-              <img
-                src={p.filePath}
-                alt={p.fileName}
-                className="h-32 w-full object-cover"
-                loading="lazy"
-              />
-            </a>
+              <a href={p.filePath} target="_blank" rel="noreferrer">
+                <img
+                  src={p.filePath}
+                  alt={p.fileName}
+                  className="h-32 w-full object-cover"
+                  loading="lazy"
+                />
+              </a>
+              <a
+                href={p.filePath}
+                download={p.fileName}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-1 border-t border-border py-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Download className="h-3.5 w-3.5" /> Download
+              </a>
+            </div>
           ))}
         </div>
       </DialogContent>

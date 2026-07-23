@@ -87,6 +87,7 @@ export const ENDPOINTS = {
   analytics: {
     feedPond: (pondId: string) => `/analytics/feed/pond/${pondId}`,
     feedSite: (siteId: string) => `/analytics/feed/site/${siteId}`,
+    feedSiteDaily: (siteId: string) => `/analytics/feed/site/${siteId}/daily`,
     harvestPond: (pondId: string) => `/analytics/harvest/pond/${pondId}`,
     harvestSite: (siteId: string) => `/analytics/harvest/site/${siteId}`,
     inventorySite: (siteId: string) => `/analytics/inventory/site/${siteId}`,

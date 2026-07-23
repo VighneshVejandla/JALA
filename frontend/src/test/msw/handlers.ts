@@ -104,6 +104,7 @@ export const handlers = [
   http.get(`${BASE}/analytics/inventory/site/:siteId`, () =>
     ok(fx.inventoryAnalytics),
   ),
+  http.get(`${BASE}/analytics/feed/site/:siteId/daily`, () => ok(fx.dailyFeed)),
   http.get(`${BASE}/analytics/feed/site/:siteId`, () => ok(fx.siteFeedAnalytics)),
   http.get(`${BASE}/analytics/harvest/site/:siteId`, () =>
     ok(fx.siteHarvestAnalytics),

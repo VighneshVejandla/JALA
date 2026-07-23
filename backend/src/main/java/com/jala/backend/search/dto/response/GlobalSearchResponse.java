@@ -9,6 +9,8 @@ import java.util.List;
 @Builder
 public class GlobalSearchResponse {
 
+    private List<SearchResultResponse> users;
+
     private List<SearchResultResponse> sites;
 
     private List<SearchResultResponse> ponds;
